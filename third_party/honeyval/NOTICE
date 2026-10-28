@@ -1,0 +1,15 @@
+AdaptiveHoneypotEnv vendors the SecretStorage application from
+google-research/honeyval at commit 86272d8d1fb4b3090037561cc31b28dc8a8350f8.
+
+SecretStorage application source
+  path: data/baxbench-webapps/SecretStorage/sec/app.py
+  copyright: Copyright 2026 Google LLC
+  license: Apache License, Version 2.0 (see LICENSE in this directory)
+
+BaxBench scenario test, OpenAPI specification, and cwes.json
+  copyright: Copyright (c) 2025 SRI Lab, LogicStar.ai
+  license: MIT License (see third_party/baxbench/LICENSE)
+
+The files under this directory are unmodified upstream bytes except where
+PATCHES.md records a local patch. Runtime configuration that is not a source
+patch is also recorded there.
