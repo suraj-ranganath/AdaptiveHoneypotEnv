@@ -113,7 +113,16 @@ def test_package_does_not_read_provider_env_or_import_a_network_client() -> None
         "os.environ",
         "getenv(",
     )
+    # deployment.py is the trusted launcher. It opens the loopback relay and
+    # the Docker API. Every other module stays free of network clients, and
+    # the launcher itself still must not read a provider credential.
+    launcher = Path("adaptivehoneypotenv/deployment.py")
+    provider_reads = ("OPENROUTER_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "getenv(")
     for path in Path("adaptivehoneypotenv").rglob("*.py"):
         text = path.read_text(encoding="utf-8")
+        if path == launcher:
+            for banned in provider_reads:
+                assert banned not in text, f"{path} contains {banned}"
+            continue
         for banned in banned_imports:
             assert banned not in text, f"{path} contains {banned}"

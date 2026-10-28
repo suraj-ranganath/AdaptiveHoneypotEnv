@@ -21,7 +21,7 @@
   },
   "packages_requested_for_phase0_lock": [],
   "runtime": "Python 3.11+ using the Phase 0 dependency set. Scenario tests run under pytest.",
-  "source_policy": "The pinned SecretStorage tree is not copied into git by this workstream. materialize_workspace copies it into source/ when WS1's vendor path is present. workspace/source/README.md is the lab pointer until then.",
+  "source_policy": "WS1 vendors the unmodified SecretStorage app at honeyval.vendor_path. Hashes are in third_party/honeyval/PATCHES.md. materialize_workspace copies that tree into source/. The email-deliverability switch is runtime configuration in the image entrypoint, not a source patch.",
   "rng": {
     "public_layout": "migration-list order and review sentence only",
     "private_fixture": "account identities, noise stored values, signing key, protected values",
