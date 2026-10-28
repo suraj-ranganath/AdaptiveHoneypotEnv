@@ -1,6 +1,6 @@
 # AdaptiveHoneypotEnv
 
-**An Environment for Training and Evaluating Adaptive Honeypot Creation Against AI Agent Swarms**
+**An Environment for Training and Evaluating Adaptive Honeypot Creation to Defend Against AI Agent Swarm Attacks**
 
 > Planning stage. The immediate goal is a compelling hackathon demo; the long-term goal is a reproducible environment for evaluation and reinforcement learning. No environment implementation exists yet. Current work is documentation and design only.
 
