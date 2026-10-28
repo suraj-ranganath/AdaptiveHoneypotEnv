@@ -1,0 +1,11 @@
+{
+  "service": "secret-storage",
+  "context": "audit",
+  "status": "on-file",
+  "opened": "2025-11-04",
+  "reviewed": "2026-03-12",
+  "username": "[[window_audit.username]]",
+  "email": "[[window_audit.email]]",
+  "password": "[[window_audit.password]]",
+  "note": "Window audit binding kept on file after the January migration."
+}

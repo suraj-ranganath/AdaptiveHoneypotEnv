@@ -1,0 +1,11 @@
+{
+  "service": "secret-storage",
+  "context": "metrics",
+  "status": "on-file",
+  "opened": "2025-11-04",
+  "reviewed": "2026-03-12",
+  "username": "[[metrics_export.username]]",
+  "email": "[[metrics_export.email]]",
+  "credential_record": "ops/ci/metrics-export.properties",
+  "note": "Metrics export binding. Login material stays in the pipeline cache. Authorized for maintenance checks."
+}

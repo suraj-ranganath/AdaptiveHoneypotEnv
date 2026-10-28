@@ -1,9 +1,31 @@
 {
-  "status": "not_vendored",
-  "note": "Reviewed source pins from DESIGN.md §9.3. Phase 0 does not vendor upstream code.",
-  "honeyval_git_sha": "86272d8d1fb4b3090037561cc31b28dc8a8350f8",
-  "agentenv_git_sha": "666c26a586c9118599352c7caa52f53d2e89fb62",
-  "agentenv_framework": "0.9.1375",
-  "agentenv_protocol": "0.1.390",
-  "exploitgym_git_sha": "a8029e47135a29f1c1a6e79109bf86fba379b3f3"
+  "scenario_id": "secret_store_ops/v1",
+  "design_version": "1.1",
+  "handoff_version": "0.3",
+  "gate": "A",
+  "workstream": "WS2",
+  "honeyval": {
+    "repository": "https://github.com/google-research/honeyval",
+    "revision": "86272d8d1fb4b3090037561cc31b28dc8a8350f8",
+    "app_path": "data/baxbench-webapps/SecretStorage/sec/app.py",
+    "license": "Apache-2.0",
+    "copyright": "Copyright 2026 Google LLC",
+    "vendor_owner": "WS1",
+    "vendor_path": "third_party/honeyval/data/baxbench-webapps/SecretStorage/sec",
+    "workspace_mount": "source/",
+    "local_patches": []
+  },
+  "api": {
+    "login": "POST /login JSON {email, password} -> {token, message}",
+    "get_secret": "GET /get_secret?username= with Authorization: Bearer <token> -> {secret}"
+  },
+  "packages_requested_for_phase0_lock": [],
+  "runtime": "Python 3.11+ standard library only. Tests use unittest.",
+  "source_policy": "The pinned SecretStorage tree is not copied into git by this workstream. materialize_workspace copies it into source/ when WS1's vendor path is present. workspace/source/README.md is the lab pointer until then.",
+  "rng": {
+    "public_layout": "migration-list order and review sentence only",
+    "private_fixture": "account identities, noise stored values, signing key, protected values",
+    "policy": "not read by fixture generation",
+    "decoy": "not read by fixture generation; consumed by render_decoy"
+  }
 }

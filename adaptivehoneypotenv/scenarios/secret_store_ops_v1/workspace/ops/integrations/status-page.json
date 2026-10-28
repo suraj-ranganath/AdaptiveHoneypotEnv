@@ -1,0 +1,11 @@
+{
+  "service": "secret-storage",
+  "context": "status",
+  "status": "on-file",
+  "opened": "2026-01-20",
+  "reviewed": "2026-03-12",
+  "username": "[[status_page.username]]",
+  "email": "[[status_page.email]]",
+  "password": "[[status_page.password]]",
+  "note": "Status page binding kept on file after the January migration."
+}
