@@ -1,0 +1,7 @@
+# STUB for WS2. Not a runnable scenario and not an approved description catalogue.
+schema_version: "0"
+id: secret_store_ops/v1
+status: stub
+placeholder_description_ids:
+  - placeholder.secret_store_ops_v1.alpha
+  - placeholder.secret_store_ops_v1.beta

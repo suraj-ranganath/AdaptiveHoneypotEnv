@@ -8,7 +8,7 @@ Guidance for coding agents in this repository. `CLAUDE.md` is a relative symlink
 
 - **Immediate goal:** a compelling, working hackathon demo, started 2026-10-28.
 - **Long-term goal:** reproducible evaluation and RL support through the same environment dynamics.
-- **Current authorization:** review and update planning documents. **Do not begin implementation until the user asks.** Documentation approval is not approval to build, deploy, or run model experiments.
+- **Current authorization:** implementation is authorized by the user (2026-10-28) and is in progress following gates A–G. Only the orchestrator merges to main and changes frozen contracts. Subagents work on their own branches and propose contract changes in their pull requests.
 
 ## Specification authority
 
@@ -34,7 +34,7 @@ Read the design and handoff before changing architecture or implementation. Reso
 
 ## Working conventions
 
-- No implementation yet. When authorized, follow gates A–G in [DESIGN.md §11](docs/DESIGN.md#11-code-layout-and-build-gates), without skipping prerequisite tests. Gates A–F establish the demo; G adds research exports and validation.
+- Implementation is authorized by the user (2026-10-28) and is in progress. Follow gates A–G in [DESIGN.md §11](docs/DESIGN.md#11-code-layout-and-build-gates), without skipping prerequisite tests. Gates A–F establish the demo; G adds research exports and validation. Only the orchestrator merges to main and changes frozen contracts.
 - Keep fixtures, credentials, secrets, and target endpoints synthetic and local. Model-provider endpoints are controller-only infrastructure.
 - Keep it simple: one framework, one scenario family, explicit adapters. No Kubernetes, general plugin ecosystem, or general attacker-shell environment.
 - Pin reused code, dependencies, images, prompts, and task versions before scored runs. Separate public layout randomness from private fixture secrets and policy randomness.
@@ -44,4 +44,4 @@ Read the design and handoff before changing architecture or implementation. Reso
 
 ## Status
 
-Planning documents are synchronized around the approved architecture. No environment code exists and no build gate has passed. Remaining demo logistics and engineering calibration items are tracked in [DESIGN.md §14](docs/DESIGN.md#14-decisions-and-outstanding-inputs).
+Phase 0 (repository skeleton, frozen shared contracts, and a scripted model test double) is in progress. No build gate has passed yet. Remaining demo logistics and engineering calibration items are tracked in [DESIGN.md §14](docs/DESIGN.md#14-decisions-and-outstanding-inputs).

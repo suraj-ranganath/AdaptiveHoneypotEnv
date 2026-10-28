@@ -2,7 +2,7 @@
 
 **An Environment for Training and Evaluating Adaptive Honeypot Creation to Defend Against AI Agent Swarm Attacks**
 
-> Planning stage. The immediate goal is a compelling hackathon demo; the long-term goal is a reproducible environment for evaluation and reinforcement learning. No environment implementation exists yet. Current work is documentation and design only.
+> Phase 0 is in progress: repository skeleton, frozen contracts, and a scripted model test double. No build gate has passed. The demo is not runnable yet.
 
 ## Motivation
 
@@ -47,7 +47,16 @@ Read in this order:
 
 ## Getting started
 
-There is no runnable environment yet. [demo.yaml](demo.yaml) is a proposed configuration contract, not an executable demo. Planned entry points are `make up` and a devcontainer; dependency and image locks will be established during implementation. Do not assume any build gate has passed.
+Phase 0 installs the package and runs contract tests. It does not start a target, a bridge, or a model call.
+
+```bash
+make setup
+make lint
+make typecheck
+make test
+```
+
+[demo.yaml](demo.yaml) is the demo profile (`runtime.max_cost_usd` is 5.0). A live or scored run still needs a resolved manifest with pins; that resolver rejects a missing numeric cap. Frozen contracts are summarized in [docs/CONTRACTS.md](docs/CONTRACTS.md). Do not assume any build gate has passed.
 
 ## Repository structure
 
@@ -59,4 +68,8 @@ demo.yaml                       proposed demo configuration
 docs/DESIGN.md                   authoritative specification
 docs/IMPLEMENTATION_HANDOFF.md   detailed contracts and source map
 docs/RESEARCH_FINDINGS.md        reviewed evidence and limitations
+docs/CONTRACTS.md                frozen Phase 0 contracts
+adaptivehoneypotenv/             package skeleton and contracts
+web/                             observer placeholder (WS5)
+third_party/                     notices placeholder; nothing vendored yet
 ```
