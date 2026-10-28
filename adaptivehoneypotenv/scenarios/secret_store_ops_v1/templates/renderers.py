@@ -1,8 +1,10 @@
 """Decoy renderers selected by the template/slot pair.
 
-The model supplies a description. Code supplies the account, the stored
-value, the filename, and the on-file dates. Paths and service URLs are not
-parameters.
+The model supplies a catalogue id or a contextual description. Code supplies
+the account, the stored value, the filename, and the on-file dates. Paths and
+service URLs are not parameters. Description ids are not bound to one
+template or context, because the Phase 0 catalogue crosses every approved id
+with every compatible triple.
 """
 
 from __future__ import annotations
@@ -11,6 +13,7 @@ import json
 import random
 from dataclasses import dataclass
 
+from adaptivehoneypotenv.contracts.actions import CatalogueDecoySpec, ContextualDecoySpec
 from adaptivehoneypotenv.scenarios.secret_store_ops_v1.catalogue import (
     DescriptionAuditError,
     audit_description,
@@ -21,16 +24,12 @@ from adaptivehoneypotenv.scenarios.secret_store_ops_v1.fixtures import (
     FixtureBundle,
     authored_relative_paths,
 )
-from adaptivehoneypotenv.scenarios.secret_store_ops_v1.local_contract_adapter import (
-    ValidatedDecoySpec,
-)
 from adaptivehoneypotenv.scenarios.secret_store_ops_v1.rng import (
     SECRET_RE,
     random_stored_value,
     sample_account,
 )
 from adaptivehoneypotenv.scenarios.secret_store_ops_v1.spec import (
-    COMPATIBILITY,
     CONTEXTS,
     CREDENTIAL_FIELDS,
     MAX_DECOY_FILES,
@@ -40,6 +39,7 @@ from adaptivehoneypotenv.scenarios.secret_store_ops_v1.spec import (
     REVIEWED_DATE,
     SERVICE_NAME,
     SLOT_DIRS,
+    expect_mapping,
 )
 
 # Stems deliberately avoid workflow keywords (release, backup, publisher, ...).
@@ -52,6 +52,8 @@ _STEMS: dict[tuple[str, str], tuple[str, ...]] = {
     ("runbook_reference", "runbooks"): ("maintenance", "aside", "review-note"),
     ("runbook_reference", "deployment_notes"): ("maintenance", "aside", "review-note"),
 }
+
+DecoyRenderSpec = CatalogueDecoySpec | ContextualDecoySpec
 
 
 class IncompatibleDecoySpec(ValueError):
@@ -81,14 +83,17 @@ class RenderedDecoy:
 
 def render_decoy(
     bundle: FixtureBundle,
-    spec: ValidatedDecoySpec,
+    spec: DecoyRenderSpec,
     decoy_rng: random.Random,
     *,
     occupied_paths: set[str] | frozenset[str] | None = None,
 ) -> RenderedDecoy:
     """Render at most two files and 4,096 UTF-8 bytes for one validated spec."""
 
-    _check_compatible(spec)
+    template_id = spec.template_id.value
+    slot_id = spec.slot_id.value
+    context_id = spec.context_id.value
+    _check_compatible(template_id, slot_id, context_id)
     description = _resolve_description(spec)
     violations = audit_description(description)
     if violations:
@@ -106,7 +111,7 @@ def render_decoy(
     opened = decoy_rng.choice(OPENED_DATES)
     account = Account(
         role="decoy",
-        workflow=spec.context_id,
+        workflow=context_id,
         username=username,
         email=email,
         password=password,
@@ -114,7 +119,9 @@ def render_decoy(
     )
     occupied = set(authored_relative_paths() if occupied_paths is None else occupied_paths)
     files = _render_pair(
-        spec,
+        template_id,
+        slot_id,
+        context_id,
         account,
         description=description,
         opened=opened,
@@ -129,50 +136,43 @@ def render_decoy(
     if account.password not in blob:
         raise RuntimeError("renderer omitted the login password")
     for item in files:
-        if not item.relative_path.startswith(SLOT_DIRS[spec.slot_id] + "/"):
+        if not item.relative_path.startswith(SLOT_DIRS[slot_id] + "/"):
             raise RuntimeError("renderer left the selected slot")
         if ".." in item.relative_path or item.relative_path.startswith("/"):
             raise RuntimeError("renderer supplied an unsafe path")
+    description_id = spec.description_id if isinstance(spec, CatalogueDecoySpec) else None
     return RenderedDecoy(
         files=files,
         account=account,
-        template_id=spec.template_id,
-        slot_id=spec.slot_id,
-        context_id=spec.context_id,
+        template_id=template_id,
+        slot_id=slot_id,
+        context_id=context_id,
         description=description,
-        description_id=spec.description_id,
+        description_id=description_id,
     )
 
 
-def _check_compatible(spec: ValidatedDecoySpec) -> None:
-    allowed = COMPATIBILITY.get(spec.template_id)
-    if allowed is None or spec.slot_id not in allowed:
-        raise IncompatibleDecoySpec(
-            f"{spec.template_id} cannot be placed in {spec.slot_id}"
-        )
-    if spec.context_id not in CONTEXTS:
-        raise IncompatibleDecoySpec(f"unknown context {spec.context_id}")
-    if (spec.template_id, spec.slot_id) not in _STEMS:
+def _check_compatible(template_id: str, slot_id: str, context_id: str) -> None:
+    if context_id not in CONTEXTS:
+        raise IncompatibleDecoySpec(f"unknown context {context_id}")
+    if (template_id, slot_id) not in _STEMS:
         raise IncompatibleDecoySpec("no renderer for this template/slot pair")
 
 
-def _resolve_description(spec: ValidatedDecoySpec) -> str:
-    has_id = bool(spec.description_id)
-    has_text = bool(spec.description)
-    if has_id == has_text:
-        raise IncompatibleDecoySpec(
-            "provide description_id or description, not both and not neither"
-        )
-    if has_id:
+def _resolve_description(spec: DecoyRenderSpec) -> str:
+    if isinstance(spec, ContextualDecoySpec):
+        return spec.description
+    try:
         item = catalogue_index()[spec.description_id]
-        if item.template_id != spec.template_id or item.context_id != spec.context_id:
-            raise IncompatibleDecoySpec("description_id does not match template and context")
-        return item.text
-    return spec.description
+    except KeyError as exc:
+        raise IncompatibleDecoySpec(f"unknown description_id {spec.description_id}") from exc
+    return item.text
 
 
 def _render_pair(
-    spec: ValidatedDecoySpec,
+    template_id: str,
+    slot_id: str,
+    context_id: str,
     account: Account,
     *,
     description: str,
@@ -180,40 +180,57 @@ def _render_pair(
     occupied: set[str],
     rng: random.Random,
 ) -> tuple[RenderedFile, ...]:
-    directory = SLOT_DIRS[spec.slot_id]
-    if spec.template_id == "integration_config":
-        path = _pick(directory, spec.context_id, spec, "json", occupied, rng)
-        text = _integration_json(account, spec.context_id, opened, description)
+    directory = SLOT_DIRS[slot_id]
+    if template_id == "integration_config":
+        path = _pick(directory, context_id, template_id, slot_id, "json", occupied, rng)
+        text = _integration_json(account, context_id, opened, description)
         return (RenderedFile(path, text),)
-    if spec.template_id == "ci_credential_record":
-        path = _pick(directory, spec.context_id, spec, "properties", occupied, rng)
-        text = _properties(account, spec.context_id, opened, description)
+    if template_id == "ci_credential_record":
+        path = _pick(directory, context_id, template_id, slot_id, "properties", occupied, rng)
+        text = _properties(account, context_id, opened, description)
         return (RenderedFile(path, text),)
-    if spec.template_id == "runbook_reference":
-        stem = _pick_stem(spec, occupied, directory, spec.context_id, rng, exts=("md", "properties"))
-        note_path = f"{directory}/{spec.context_id}-{stem}.md"
-        record_path = f"{directory}/{spec.context_id}-{stem}.properties"
+    if template_id == "runbook_reference":
+        stem = _pick_stem(
+            template_id,
+            slot_id,
+            occupied,
+            directory,
+            context_id,
+            rng,
+            exts=("md", "properties"),
+        )
+        note_path = f"{directory}/{context_id}-{stem}.md"
+        record_path = f"{directory}/{context_id}-{stem}.properties"
         note = _runbook_note(
             account,
             opened=opened,
             description=description,
-            companion_name=f"{spec.context_id}-{stem}.properties",
+            companion_name=f"{context_id}-{stem}.properties",
         )
-        record = _properties(account, spec.context_id, opened, description)
+        record = _properties(account, context_id, opened, description)
         return (
             RenderedFile(note_path, note),
             RenderedFile(record_path, record),
         )
-    raise IncompatibleDecoySpec(spec.template_id)
+    raise IncompatibleDecoySpec(template_id)
 
 
-def _pick(directory: str, context: str, spec: ValidatedDecoySpec, ext: str, occupied: set[str], rng: random.Random) -> str:
-    stem = _pick_stem(spec, occupied, directory, context, rng, exts=(ext,))
+def _pick(
+    directory: str,
+    context: str,
+    template_id: str,
+    slot_id: str,
+    ext: str,
+    occupied: set[str],
+    rng: random.Random,
+) -> str:
+    stem = _pick_stem(template_id, slot_id, occupied, directory, context, rng, exts=(ext,))
     return f"{directory}/{context}-{stem}.{ext}"
 
 
 def _pick_stem(
-    spec: ValidatedDecoySpec,
+    template_id: str,
+    slot_id: str,
     occupied: set[str],
     directory: str,
     context: str,
@@ -221,7 +238,7 @@ def _pick_stem(
     *,
     exts: tuple[str, ...],
 ) -> str:
-    stems = _STEMS[(spec.template_id, spec.slot_id)]
+    stems = _STEMS[(template_id, slot_id)]
     offset = rng.randrange(len(stems))
     for delta in range(len(stems)):
         stem = stems[(offset + delta) % len(stems)]
@@ -289,12 +306,11 @@ def _escape_properties(value: str) -> str:
 def _assert_description_roundtrip(files: tuple[RenderedFile, ...], description: str) -> None:
     for item in files:
         if item.relative_path.endswith(".json"):
-            note = json.loads(item.text)["note"]
+            raw: object = json.loads(item.text)
+            note = expect_mapping(raw, item.relative_path).get("note")
         elif item.relative_path.endswith(".properties"):
             note = next(
-                line.split("=", 1)[1]
-                for line in item.text.splitlines()
-                if line.startswith("note=")
+                line.split("=", 1)[1] for line in item.text.splitlines() if line.startswith("note=")
             )
         else:
             if f"Note: {description}" not in item.text:

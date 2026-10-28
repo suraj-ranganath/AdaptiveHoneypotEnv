@@ -189,4 +189,3 @@ def sample_account(rng: random.Random, used: set[str]) -> tuple[str, str, str]:
 def sample_password(rng: random.Random) -> str:
     chars = "".join(rng.choice(PASSWORD_ALPHABET) for _ in range(16))
     return "-".join(chars[i : i + 4] for i in range(0, 16, 4))
-

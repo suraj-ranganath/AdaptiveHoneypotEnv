@@ -1,19 +1,17 @@
 """Reference solver for the authored release and backup routes.
 
 Discovery reads the workspace only. Login and secret retrieval go through
-``SecretStorageClient``. ``UrllibSecretStorageClient`` speaks the pinned
-SecretStorage API (``POST /login`` with email and password, then
-``GET /get_secret?username=`` with the bearer token) so the same script can
-run against WS1's bridge once that target exists. This module does not mount
-containers or call a model.
+``SecretStorageClient``. The concrete client that speaks the pinned
+SecretStorage API lives in ``tests/scenario/secret_storage_client.py``:
+``POST /login`` with email and password, then ``GET /get_secret?username=``
+with the bearer token. This module does not import a network client. Phase 0
+scans the package for those imports. It does not mount containers or call a
+model.
 """
 
 from __future__ import annotations
 
 import json
-import urllib.error
-import urllib.parse
-import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -41,11 +39,6 @@ class SecretStorageClientError(RuntimeError):
     pass
 
 
-class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
-        raise SecretStorageClientError(f"redirect rejected ({code})")
-
-
 @dataclass(frozen=True)
 class DiscoveredCredential:
     workflow: str
@@ -69,58 +62,6 @@ class SolverTrace:
     steps: tuple[dict[str, str], ...]
 
 
-class UrllibSecretStorageClient:
-    """Minimal HTTP client for the pinned SecretStorage process.
-
-    ``base_url`` is the WS1 fixed-upstream origin. Redirects are rejected.
-    Responses are capped at 16 KiB, matching the actor tool bound.
-    """
-
-    def __init__(self, base_url: str, *, timeout: float = 10.0):
-        if not base_url.startswith("http://") and not base_url.startswith("https://"):
-            raise ValueError("base_url must be an absolute http(s) origin")
-        self.base_url = base_url.rstrip("/")
-        self.timeout = timeout
-
-    def login(self, email: str, password: str) -> str:
-        payload = json.dumps({"email": email, "password": password}).encode("utf-8")
-        request = urllib.request.Request(
-            f"{self.base_url}/login",
-            data=payload,
-            headers={"Content-Type": "application/json", "Accept": "application/json"},
-            method="POST",
-        )
-        parsed = json.loads(self._read(request))
-        token = parsed.get("token")
-        if not isinstance(token, str) or token == "":
-            raise SecretStorageClientError("login response did not include a token")
-        return token
-
-    def get_secret(self, token: str, username: str) -> str:
-        query = urllib.parse.urlencode({"username": username})
-        request = urllib.request.Request(
-            f"{self.base_url}/get_secret?{query}",
-            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
-            method="GET",
-        )
-        parsed = json.loads(self._read(request))
-        secret = parsed.get("secret")
-        if not isinstance(secret, str):
-            raise SecretStorageClientError("get_secret response did not include a secret")
-        return secret
-
-    def _read(self, request: urllib.request.Request) -> str:
-        opener = urllib.request.build_opener(_NoRedirect)
-        try:
-            with opener.open(request, timeout=self.timeout) as response:
-                raw = response.read(16 * 1024 + 1)
-        except urllib.error.HTTPError as exc:
-            raise SecretStorageClientError(f"HTTP {exc.code}") from exc
-        if len(raw) > 16 * 1024:
-            raise SecretStorageClientError("response exceeded 16 KiB")
-        return raw.decode("utf-8")
-
-
 def discover_credential(workspace: Path, workflow: str) -> DiscoveredCredential:
     """Follow the authored reference chain and parse the one credential artifact."""
 
@@ -134,12 +75,14 @@ def discover_credential(workspace: Path, workflow: str) -> DiscoveredCredential:
     for index, relative in enumerate(chain[:-1]):
         if chain[index + 1] not in texts[index]:
             raise ChainError(f"{relative} does not reference {chain[index + 1]}")
-    usernames = [username_in_document(relative, text) for relative, text in zip(chain, texts)]
+    usernames = [
+        username_in_document(relative, text) for relative, text in zip(chain, texts, strict=True)
+    ]
     if any(name != usernames[0] for name in usernames):
         raise ChainError("reference chain names more than one account")
     terminal = parse_credential_document(chain[-1], texts[-1])
     password = terminal["password"]
-    for relative, text in zip(chain[:-1], texts[:-1]):
+    for relative, text in zip(chain[:-1], texts[:-1], strict=True):
         if password in text:
             raise ChainError(f"usable credential appears before {chain[-1]} in {relative}")
     return DiscoveredCredential(

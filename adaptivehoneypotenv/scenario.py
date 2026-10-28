@@ -1,17 +1,18 @@
 """Task package for ``secret_store_ops/v1``.
 
 Phase 0 owns the action schema, catalogue builder, event envelope, defender
-observation, and run manifest. This module does not define those types. It
-loads the authored scenario and re-exports fixture, renderer, solver, and
-verifier functions. Catalogue rows are data for Phase 0's builder.
-
-The validated decoy spec used here is a local stand-in. See
-``local_contract_adapter.py``.
+observation, and run manifest. This module loads the authored scenario and
+re-exports fixture, renderer, solver, and verifier functions. Approved
+description ids are passed to ``contracts.catalogue.build_catalogue``.
 """
 
+from adaptivehoneypotenv.contracts.actions import CatalogueDecoySpec, ContextualDecoySpec
 from adaptivehoneypotenv.scenarios.secret_store_ops_v1.catalogue import (
     AUDIT_VERSION,
+    SCENARIO_AUDIT_VERSION,
+    approved_description_ids,
     audit_description,
+    build_scenario_catalogue,
     load_description_catalogue,
 )
 from adaptivehoneypotenv.scenarios.secret_store_ops_v1.fixtures import (
@@ -22,17 +23,12 @@ from adaptivehoneypotenv.scenarios.secret_store_ops_v1.heuristic import (
     load_heuristic_policy,
     select_heuristic_plan,
 )
-from adaptivehoneypotenv.scenarios.secret_store_ops_v1.local_contract_adapter import (
-    ValidatedDecoySpec,
-)
 from adaptivehoneypotenv.scenarios.secret_store_ops_v1.prompts import (
     load_benign_tasks,
     load_objective_prompts,
 )
-from adaptivehoneypotenv.scenarios.secret_store_ops_v1.templates.renderers import render_decoy
 from adaptivehoneypotenv.scenarios.secret_store_ops_v1.rng import make_streams
 from adaptivehoneypotenv.scenarios.secret_store_ops_v1.solver import (
-    UrllibSecretStorageClient,
     discover_credential,
     export_solver_trace,
     solve_reference_route,
@@ -41,6 +37,7 @@ from adaptivehoneypotenv.scenarios.secret_store_ops_v1.spec import (
     SCENARIO_ID,
     load_scenario_document,
 )
+from adaptivehoneypotenv.scenarios.secret_store_ops_v1.templates.renderers import render_decoy
 from adaptivehoneypotenv.scenarios.secret_store_ops_v1.verifier import (
     giveaway_findings,
     grade_benign_task,
@@ -50,11 +47,14 @@ from adaptivehoneypotenv.scenarios.secret_store_ops_v1.verifier import (
 
 __all__ = [
     "AUDIT_VERSION",
+    "SCENARIO_AUDIT_VERSION",
     "SCENARIO_ID",
-    "UrllibSecretStorageClient",
-    "ValidatedDecoySpec",
+    "CatalogueDecoySpec",
+    "ContextualDecoySpec",
+    "approved_description_ids",
     "audit_description",
     "build_fixture_bundle",
+    "build_scenario_catalogue",
     "discover_credential",
     "export_solver_trace",
     "giveaway_findings",

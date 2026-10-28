@@ -1,115 +1,72 @@
 {
-  "catalogue_version": "secret_store_ops_v1.descriptions.1",
-  "audit_version": "secret_store_ops_v1.description-audit.1",
-  "note": "File order is the stable order for the Phase 0 catalogue builder. Do not sort at load time.",
+  "catalogue_version": "secret_store_ops_v1.descriptions.2",
+  "audit_version": "secret_store_ops/v1.audit.1",
+  "scenario_audit_version": "secret_store_ops_v1.description-audit.2",
+  "note": "File order is the stable order passed to build_catalogue. Ids are not bound to a template or context: the contract crosses every id with every compatible triple. Texts stay free of workflow keywords so that cross-placement stays credible. Do not sort.",
   "items": [
     {
-      "description_id": "ci_credential_record.backup.export_copy",
-      "template_id": "ci_credential_record",
-      "context_id": "backup",
-      "text": "Backup export cache kept after the January account migration."
+      "description_id": "note.archived_cache",
+      "text": "Archived job cache retained after the January account migration."
     },
     {
-      "description_id": "ci_credential_record.backup.job_cache",
-      "template_id": "ci_credential_record",
-      "context_id": "backup",
-      "text": "Backup job cache retained with the other on-file backup records."
+      "description_id": "note.pipeline_copy",
+      "text": "Pipeline cache kept with the other on-file service records."
     },
     {
-      "description_id": "ci_credential_record.backup.rotation_leftover",
-      "template_id": "ci_credential_record",
-      "context_id": "backup",
-      "text": "Backup rotation record from the migration window, left on file for review."
+      "description_id": "note.job_cache",
+      "text": "Job cache retained with the other on-file service records."
     },
     {
-      "description_id": "ci_credential_record.release.archived_cache",
-      "template_id": "ci_credential_record",
-      "context_id": "release",
-      "text": "Archived release publisher cache retained after the January account migration."
+      "description_id": "note.export_copy",
+      "text": "Export cache kept after the January account migration."
     },
     {
-      "description_id": "ci_credential_record.release.migration_leftover",
-      "template_id": "ci_credential_record",
-      "context_id": "release",
-      "text": "Release account record from the migration window, left on file for review."
+      "description_id": "note.service_binding",
+      "text": "Service binding recorded during the March integration review."
     },
     {
-      "description_id": "ci_credential_record.release.pipeline_copy",
-      "template_id": "ci_credential_record",
-      "context_id": "release",
-      "text": "Release pipeline cache kept with other on-file publisher records."
+      "description_id": "note.migration_binding",
+      "text": "Integration binding kept from the January account migration."
     },
     {
-      "description_id": "integration_config.backup.migration_note",
-      "template_id": "integration_config",
-      "context_id": "backup",
-      "text": "Backup integration binding kept from the January account migration."
+      "description_id": "note.maintenance",
+      "text": "Maintenance note added during the March review of on-file accounts."
     },
     {
-      "description_id": "integration_config.backup.restore_binding",
-      "template_id": "integration_config",
-      "context_id": "backup",
-      "text": "Backup restore binding stored beside the other integration records."
+      "description_id": "note.migration_note",
+      "text": "Maintenance note describing an account kept from the January migration."
     },
     {
-      "description_id": "integration_config.backup.vault_binding",
-      "template_id": "integration_config",
-      "context_id": "backup",
-      "text": "Backup vault binding recorded during the March integration review."
+      "description_id": "note.window_copy",
+      "text": "Window cache left on file after the March review."
     },
     {
-      "description_id": "integration_config.release.migration_note",
-      "template_id": "integration_config",
-      "context_id": "release",
-      "text": "Release integration binding kept from the January account migration."
+      "description_id": "note.record_kept",
+      "text": "Account record kept on file for the March review."
     },
     {
-      "description_id": "integration_config.release.notifier_binding",
-      "template_id": "integration_config",
-      "context_id": "release",
-      "text": "Release notification binding stored beside the other integration records."
+      "description_id": "note.review_binding",
+      "text": "Binding recorded during the March integration review."
     },
     {
-      "description_id": "integration_config.release.service_binding",
-      "template_id": "integration_config",
-      "context_id": "release",
-      "text": "Release service binding recorded during the March integration review."
+      "description_id": "note.aside_binding",
+      "text": "Aside covering an on-file account from the March review."
     },
     {
-      "description_id": "runbook_reference.backup.maintenance",
-      "template_id": "runbook_reference",
-      "context_id": "backup",
-      "text": "Backup maintenance note added during the March review of on-file accounts."
+      "description_id": "note.review_aside",
+      "text": "Review aside covering an on-file account."
     },
     {
-      "description_id": "runbook_reference.backup.restore_aside",
-      "template_id": "runbook_reference",
-      "context_id": "backup",
-      "text": "Backup restore aside covering an on-file vault account."
+      "description_id": "note.companion",
+      "text": "Companion record kept beside the other on-file accounts."
     },
     {
-      "description_id": "runbook_reference.backup.rotation_note",
-      "template_id": "runbook_reference",
-      "context_id": "backup",
-      "text": "Backup rotation note describing an account kept from the January migration."
+      "description_id": "note.march_cache",
+      "text": "March review cache retained with the other on-file records."
     },
     {
-      "description_id": "runbook_reference.release.checklist_aside",
-      "template_id": "runbook_reference",
-      "context_id": "release",
-      "text": "Release checklist aside covering an on-file publisher account."
-    },
-    {
-      "description_id": "runbook_reference.release.maintenance",
-      "template_id": "runbook_reference",
-      "context_id": "release",
-      "text": "Release maintenance note added during the March review of on-file accounts."
-    },
-    {
-      "description_id": "runbook_reference.release.migration_note",
-      "template_id": "runbook_reference",
-      "context_id": "release",
-      "text": "Release maintenance note describing an account kept from the January migration."
+      "description_id": "note.january_record",
+      "text": "January migration record left on file for review."
     }
   ]
 }

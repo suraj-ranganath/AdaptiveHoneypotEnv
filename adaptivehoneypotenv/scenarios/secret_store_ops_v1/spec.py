@@ -8,6 +8,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from adaptivehoneypotenv.contracts.actions import (
+    COMPATIBILITY as CONTRACT_COMPATIBILITY,
+)
+from adaptivehoneypotenv.contracts.actions import (
+    CONTEXT_ORDER,
+    SLOT_DIRECTORIES,
+)
+from adaptivehoneypotenv.contracts.limits import (
+    BYTES_PER_DECOY,
+    DESCRIPTION_MAX_UNICODE_CHARS,
+    FILES_PER_DECOY,
+    LISTING_MAX_ENTRIES,
+)
+
 SCENARIO_ID = "secret_store_ops/v1"
 DESIGN_VERSION = "1.1"
 HANDOFF_VERSION = "0.3"
@@ -186,7 +200,31 @@ NOUNS = (
 PASSWORD_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
 
 
-def load_scenario_document(path: Path | None = None) -> dict:
+def expect_mapping(value: object, label: str) -> dict[str, object]:
+    """Narrow a JSON value to a string-keyed object."""
+
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be an object")
+    mapping: dict[str, object] = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            raise ValueError(f"{label} keys must be strings")
+        mapping[key] = item
+    return mapping
+
+
+def expect_string_list(value: object, label: str) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} must be a list")
+    items: list[str] = []
+    for item in value:
+        if not isinstance(item, str):
+            raise ValueError(f"{label} must contain only strings")
+        items.append(item)
+    return tuple(items)
+
+
+def load_scenario_document(path: Path | None = None) -> dict[str, object]:
     """Load ``scenario.yaml`` with a small subset parser (no PyYAML).
 
     The subset is maps, lists of scalars, nested maps, scalars, and full-line
@@ -197,7 +235,7 @@ def load_scenario_document(path: Path | None = None) -> dict:
     return _parse_yaml_subset(text)
 
 
-def _parse_yaml_subset(text: str) -> dict:
+def _parse_yaml_subset(text: str) -> dict[str, object]:
     lines: list[tuple[int, str]] = []
     for raw in text.splitlines():
         if not raw.strip() or raw.lstrip().startswith("#"):
@@ -212,12 +250,20 @@ def _parse_yaml_subset(text: str) -> dict:
             raise ValueError("unexpected end of scenario.yaml")
         if lines[index][1].startswith("- "):
             items: list[object] = []
-            while index < len(lines) and lines[index][0] == indent and lines[index][1].startswith("- "):
+            while (
+                index < len(lines)
+                and lines[index][0] == indent
+                and lines[index][1].startswith("- ")
+            ):
                 items.append(_scalar(lines[index][1][2:]))
                 index += 1
             return items, index
         mapping: dict[str, object] = {}
-        while index < len(lines) and lines[index][0] == indent and not lines[index][1].startswith("- "):
+        while (
+            index < len(lines)
+            and lines[index][0] == indent
+            and not lines[index][1].startswith("- ")
+        ):
             key, _, value = lines[index][1].partition(":")
             key = key.strip()
             value = value.strip()
@@ -237,7 +283,7 @@ def _parse_yaml_subset(text: str) -> dict:
         raise ValueError("unconsumed scenario.yaml content")
     if not isinstance(document, dict):
         raise ValueError("scenario.yaml root must be a map")
-    return document
+    return expect_mapping(document, "scenario.yaml")
 
 
 def _scalar(token: str) -> object:
@@ -248,3 +294,28 @@ def _scalar(token: str) -> object:
     if token.isdigit():
         return int(token)
     return token
+
+
+def _check_contract_alignment() -> None:
+    expected = {
+        template.value: tuple(slot.value for slot in slots)
+        for template, slots in CONTRACT_COMPATIBILITY.items()
+    }
+    if COMPATIBILITY != expected:
+        raise RuntimeError("scenario compatibility drifted from the frozen contract")
+    expected_dirs = {slot.value: directory for slot, directory in SLOT_DIRECTORIES.items()}
+    if SLOT_DIRS != expected_dirs:
+        raise RuntimeError("slot directories drifted from the frozen contract")
+    if CONTEXTS != tuple(context.value for context in CONTEXT_ORDER):
+        raise RuntimeError("contexts drifted from the frozen contract")
+    if MAX_DIRECTORY_ENTRIES != LISTING_MAX_ENTRIES:
+        raise RuntimeError("directory bound drifted from the frozen contract")
+    if MAX_DECOY_FILES != FILES_PER_DECOY:
+        raise RuntimeError("decoy file bound drifted from the frozen contract")
+    if MAX_DECOY_UTF8_BYTES != BYTES_PER_DECOY:
+        raise RuntimeError("decoy byte bound drifted from the frozen contract")
+    if MAX_DESCRIPTION_CHARS != DESCRIPTION_MAX_UNICODE_CHARS:
+        raise RuntimeError("description length drifted from the frozen contract")
+
+
+_check_contract_alignment()

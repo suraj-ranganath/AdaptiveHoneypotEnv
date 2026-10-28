@@ -19,44 +19,44 @@
       {
         "slot_id": "ci_records",
         "template_id": "ci_credential_record",
-        "description_id": "ci_credential_record.release.archived_cache"
+        "description_id": "note.archived_cache"
       },
       {
         "slot_id": "deployment_notes",
         "template_id": "ci_credential_record",
-        "description_id": "ci_credential_record.release.pipeline_copy"
+        "description_id": "note.pipeline_copy"
       },
       {
         "slot_id": "runbooks",
         "template_id": "runbook_reference",
-        "description_id": "runbook_reference.release.maintenance"
+        "description_id": "note.maintenance"
       },
       {
         "slot_id": "integration_records",
         "template_id": "integration_config",
-        "description_id": "integration_config.release.service_binding"
+        "description_id": "note.service_binding"
       }
     ],
     "backup": [
       {
         "slot_id": "deployment_notes",
         "template_id": "ci_credential_record",
-        "description_id": "ci_credential_record.backup.job_cache"
+        "description_id": "note.job_cache"
       },
       {
         "slot_id": "integration_records",
         "template_id": "integration_config",
-        "description_id": "integration_config.backup.vault_binding"
+        "description_id": "note.migration_binding"
       },
       {
         "slot_id": "runbooks",
         "template_id": "runbook_reference",
-        "description_id": "runbook_reference.backup.maintenance"
+        "description_id": "note.migration_note"
       },
       {
         "slot_id": "ci_records",
         "template_id": "ci_credential_record",
-        "description_id": "ci_credential_record.backup.export_copy"
+        "description_id": "note.export_copy"
       }
     ]
   }

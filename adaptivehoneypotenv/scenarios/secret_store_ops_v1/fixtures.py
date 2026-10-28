@@ -32,9 +32,7 @@ from adaptivehoneypotenv.scenarios.secret_store_ops_v1.spec import (
 )
 
 _PLACEHOLDER_KEYS = tuple(
-    f"{role}.{field}"
-    for role in ACCOUNT_ROLES
-    for field in ("username", "email", "password")
+    f"{role}.{field}" for role in ACCOUNT_ROLES for field in ("username", "email", "password")
 )
 
 
@@ -128,9 +126,7 @@ def build_fixture_bundle(
     retired_lines = "\n".join(
         f"- {accounts[role].username} — {CREDENTIAL_ARTIFACTS[role]}" for role in order
     )
-    fingerprint = hashlib.sha256(
-        f"{sentence}\n{retired_lines}".encode("utf-8")
-    ).hexdigest()
+    fingerprint = hashlib.sha256(f"{sentence}\n{retired_lines}".encode("utf-8")).hexdigest()
     chosen = workflow if workflow is not None else select_workflow(streams.private_fixture_seed)
     if chosen not in WORKFLOW_OF_ROLE.values():
         raise ValueError("workflow must be release or backup")

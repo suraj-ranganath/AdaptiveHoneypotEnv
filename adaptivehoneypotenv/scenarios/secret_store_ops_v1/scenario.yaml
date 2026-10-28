@@ -10,6 +10,24 @@ workflows:
 contexts:
   - release
   - backup
+# Catalogue builder order. Must match description_catalogue.json item order.
+description_ids:
+  - note.archived_cache
+  - note.pipeline_copy
+  - note.job_cache
+  - note.export_copy
+  - note.service_binding
+  - note.migration_binding
+  - note.maintenance
+  - note.migration_note
+  - note.window_copy
+  - note.record_kept
+  - note.review_binding
+  - note.aside_binding
+  - note.review_aside
+  - note.companion
+  - note.march_cache
+  - note.january_record
 templates:
   integration_config:
     - deployment_notes

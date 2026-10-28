@@ -20,7 +20,7 @@
     "get_secret": "GET /get_secret?username= with Authorization: Bearer <token> -> {secret}"
   },
   "packages_requested_for_phase0_lock": [],
-  "runtime": "Python 3.11+ standard library only. Tests use unittest.",
+  "runtime": "Python 3.11+ using the Phase 0 dependency set. Scenario tests run under pytest.",
   "source_policy": "The pinned SecretStorage tree is not copied into git by this workstream. materialize_workspace copies it into source/ when WS1's vendor path is present. workspace/source/README.md is the lab pointer until then.",
   "rng": {
     "public_layout": "migration-list order and review sentence only",
