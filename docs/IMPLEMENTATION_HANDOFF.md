@@ -39,7 +39,7 @@ Use the SDK under the explicit Compose topology in DESIGN §9. The default gatew
 | Local provider has no egress-policy enforcement | Explicit isolated target and tested fixed-upstream bridge |
 | Role comes from `AgentEnv-Role` | Bind identity to a controller-owned session/capability; strip model-supplied identity |
 | Gateway triggers ignore calls returning errors | Our scheduler counts invalid and failed attempts independently |
-| Default coding-agent wrappers may offer broader tools | Only the six declared project tools, independent actor histories |
+| Default coding-agent wrappers may offer broader tools | Only the seven declared project tools (DESIGN §6.1), independent actor histories |
 | Data/control extensions can export or reset state | Never reachable by attacker tool dispatch or credentials |
 
 The environment adapter must validate both tool discovery and invocation permissions. Hiding a tool name is not enforcement. Unknown/missing actor identity is denied, not silently promoted to controller. Administrative operations have a separate authenticated boundary. Direct protocol tests must cover spoofed roles and control-plane access.
@@ -82,7 +82,7 @@ Fault injection must cover failure after account creation, after the first item 
 
 ## 6. Actor execution and attempt accounting
 
-Use the exact six tools and bounds in DESIGN §6. Literal deterministic search, bounded reads, fixed-upstream HTTP, and explicit clipping form part of the scenario version. Unexpected filesystem/transport errors and expected invalid tool requests have different statuses. Do not substitute synthetic search hits or fake HTTP responses.
+Use the exact seven tools and bounds in DESIGN §6: `list_directory`, `search_files`, `read_file`, `request_service`, `post_to_messageboard`, `read_messageboard`, and `finish`. Literal deterministic search, bounded reads, fixed-upstream HTTP, and explicit clipping form part of the scenario version. Unexpected filesystem/transport errors and expected invalid tool requests have different statuses. Do not substitute synthetic search hits or fake HTTP responses.
 
 Model completion produces one attempted action. One/multiple/zero tool-call cases, `finish`, messageboard posts and reads, invalid arguments, and refusal handling follow the core contract. Invalid turns consume budget. Provider transport retry counts are separate and bounded; no successful tool execution is retried because the provider response or observer connection failed.
 
