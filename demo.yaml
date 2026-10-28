@@ -1,0 +1,21 @@
+# AdaptiveHoneypotEnv — default demo run configuration.
+# Contract for the implementation (see docs/DESIGN.md §12). Resolved into an
+# immutable manifest at run start. Model ids are not guaranteed to stay current.
+scenario: secret_store_ops/v1
+seed: 17
+
+attacker:
+  model: z-ai/glm-5.3-flash     # via OpenRouter (OpenAI-compatible); base_url + key from env
+  team: trio                    # solo | trio  (same team-total budget either way)
+  awareness: naive              # naive | deception_aware
+
+defender:
+  policy: adaptive_llm          # no_decoy | random | heuristic | oracle_goal | adaptive_llm
+  model: z-ai/glm-5.3-flash
+  track: contextual             # catalogue | contextual
+
+# Provider wiring (env, never committed):
+#   OPENAI_BASE_URL=https://openrouter.ai/api/v1
+#   OPENAI_API_KEY=<OpenRouter key>   # held by the controller only; actors never see it
+# Switches: OpenRouter ":free" models, or OpenCode Zen (https://opencode.ai/zen/v1,
+#   OPENCODE_API_KEY) — confirm exact free model ids via /zen/v1/models first.
