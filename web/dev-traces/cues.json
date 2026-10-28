@@ -1,0 +1,49 @@
+{
+  "notice": "DEVELOPMENT DATA — not a real run. Not evidence. Replace with a core-produced trace before demo acceptance. Payload hashes are placeholders, not content hashes.",
+  "traces": {
+    "detection-before-compromise": {
+      "waiting": 3,
+      "posted": 15,
+      "read-arc": 18,
+      "searching": 19,
+      "defender-waiting": 20,
+      "deployed": 24,
+      "inspected": 40,
+      "engaged": 49,
+      "continued": 53,
+      "after-engagement": 54,
+      "compromised": 65,
+      "end": 67
+    },
+    "genuine-compromise": {
+      "waiting": 3,
+      "read-not-compromise": 10,
+      "searching": 13,
+      "deployed": 18,
+      "compromised": 27,
+      "end": 29
+    },
+    "miss": {
+      "waiting": 3,
+      "refused": 5,
+      "clipped-search": 8,
+      "invalid": 9,
+      "posted": 12,
+      "read-arc": 15,
+      "defender-waiting": 17,
+      "rejected": 20,
+      "deployed": 26,
+      "read-not-catch": 30,
+      "end": 33
+    },
+    "same-round-tie": {
+      "waiting": 1,
+      "searching": 9,
+      "deployed": 14,
+      "engaged": 23,
+      "tie": 26,
+      "continued": 29,
+      "end": 30
+    }
+  }
+}
