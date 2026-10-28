@@ -5,6 +5,7 @@ from __future__ import annotations
 import inspect
 import json
 import random
+import tempfile
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -538,6 +539,55 @@ class ScenarioTests(unittest.TestCase):
             self.assertEqual(exported["password"], found.password)
             self.assertFalse(str(destination).startswith(str(workspace)))
             self.assertNotIn("lab-token", _tree_text(workspace))
+
+    def test_true_route_preserved_after_all_templates(self):
+        bundle = _bundle()
+        repo = Path(__file__).resolve().parents[2]
+        vendored = repo / "third_party/honeyval/data/baxbench-webapps/SecretStorage/sec/app.py"
+        description_id = load_description_catalogue()[0].description_id
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            materialize_workspace(bundle, workspace, repo_root=repo, copy_source=True)
+            mounted = workspace / "source" / "app.py"
+            self.assertEqual(mounted.read_bytes(), vendored.read_bytes())
+            protected = {
+                relative: (workspace / relative).read_bytes()
+                for chain in REFERENCE_CHAINS.values()
+                for relative in chain
+            }
+            occupied = {
+                path.relative_to(workspace).as_posix()
+                for path in workspace.rglob("*")
+                if path.is_file()
+            }
+            seed = 0
+            for template_id, slots in COMPATIBILITY.items():
+                for slot_id in slots:
+                    for context_id in CONTEXTS:
+                        rendered = render_decoy(
+                            bundle,
+                            _catalogue_spec(template_id, slot_id, context_id, description_id),
+                            _streams(decoy_seed=seed).decoy,
+                            occupied_paths=occupied,
+                        )
+                        seed += 1
+                        for item in rendered.files:
+                            self.assertNotIn(item.relative_path, protected)
+                            target = workspace / item.relative_path
+                            self.assertFalse(target.exists())
+                            target.parent.mkdir(parents=True, exist_ok=True)
+                            target.write_text(item.text, encoding="utf-8")
+                            occupied.add(item.relative_path)
+            for relative, payload in protected.items():
+                self.assertEqual((workspace / relative).read_bytes(), payload)
+            for workflow in ("release", "backup"):
+                found = discover_credential(workspace, workflow)
+                account = bundle.account_for_workflow(workflow)
+                self.assertEqual(found.credential_path, REFERENCE_CHAINS[workflow][-1])
+                self.assertEqual(found.email, account.email)
+                self.assertEqual(found.username, account.username)
+                self.assertEqual(found.password, account.password)
+            self.assertEqual(mounted.read_bytes(), vendored.read_bytes())
 
     def test_service_client_rejects_redirects(self):
         class Redirect(BaseHTTPRequestHandler):

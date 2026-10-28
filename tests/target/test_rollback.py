@@ -1,7 +1,7 @@
 """SQLite restore keeps the process and the in-memory salt.
 
-This target has no workspace files and no decoy registry. Restore covers the
-live database and the still-running process; those other stores are absent.
+This target only has database state. Restore replaces that database and
+leaves the process running.
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from __future__ import annotations
 from adaptivehoneypotenv.deployment import Deployment, EpisodeTarget
 
 
-def test_rollback_restores_accounts_files_and_registry_without_restart(
+def test_rollback_restores_database_without_restart(
     deployment: Deployment, episode: EpisodeTarget
 ) -> None:
     client = deployment.setup_client(episode)

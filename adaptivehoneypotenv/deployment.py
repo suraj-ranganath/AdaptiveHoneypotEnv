@@ -329,18 +329,28 @@ def _argv(argv: list[str]) -> list[str]:
     return argv
 
 
+def _which_tool(name: str) -> str | None:
+    """Find a firewall binary. sbin is often absent from PATH."""
+    search = os.environ.get("PATH", "") + ":/usr/sbin:/sbin"
+    found = shutil.which(name, path=search)
+    if found:
+        return found
+    fallback = "/usr/sbin/" + name
+    if os.path.isfile(fallback) and os.access(fallback, os.X_OK):
+        return fallback
+    return None
+
+
 def _run(argv: list[str]) -> subprocess.CompletedProcess[str]:
     command = _argv(argv)
-    if os.geteuid() != 0 and command[0] in _FIREWALL_BINARIES:
-        binary = shutil.which(command[0])
+    if command[0] in _FIREWALL_BINARIES:
+        binary = _which_tool(command[0])
         if binary is None:
             raise DeploymentError(f"{command[0]} is not installed")
-        command = ["sudo", "-n", binary, *command[1:]]
-    elif command[0] in _FIREWALL_BINARIES:
-        binary = shutil.which(command[0])
-        if binary is None:
-            raise DeploymentError(f"{command[0]} is not installed")
-        command = [binary, *command[1:]]
+        if os.geteuid() != 0:
+            command = ["sudo", "-n", binary, *command[1:]]
+        else:
+            command = [binary, *command[1:]]
     return subprocess.run(command, check=False, capture_output=True, text=True)
 
 
@@ -361,7 +371,7 @@ def _install_firewall(iface: str) -> list[tuple[str, list[str]]]:
         ("iptables", drop_new),
         ("iptables", allow_peers),
     ]
-    if shutil.which("iptables-legacy"):
+    if _which_tool("iptables-legacy"):
         rules.extend(
             [
                 ("iptables-legacy", drop_new),
@@ -369,7 +379,7 @@ def _install_firewall(iface: str) -> list[tuple[str, list[str]]]:
             ]
         )
     for binary in ("ip6tables", "ip6tables-legacy"):
-        if shutil.which(binary):
+        if _which_tool(binary):
             rules.append((binary, drop_new))
     for binary, insert_args in rules:
         result = _run([binary, *insert_args])

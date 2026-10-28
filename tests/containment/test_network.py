@@ -58,6 +58,30 @@ for name in config.get("names", []):
     except Exception as exc:
         result["names"][name] = f"{type(exc).__name__}: {exc}"
 
+def read_http(sock):
+    chunks = []
+    while True:
+        try:
+            piece = sock.recv(4096)
+        except socket.timeout:
+            break
+        if not piece:
+            break
+        chunks.append(piece)
+        blob = b"".join(chunks)
+        marker = blob.find(b"\r\n\r\n")
+        if marker < 0:
+            continue
+        head = blob[:marker]
+        body = blob[marker + 4 :]
+        length = None
+        for line in head.split(b"\r\n"):
+            if line.lower().startswith(b"content-length:"):
+                length = int(line.split(b":", 1)[1].strip())
+        if length is None or len(body) >= length:
+            break
+    return b"".join(chunks).decode("utf-8", "replace")[:500]
+
 bridge = config.get("bridge")
 if bridge:
     raw = (
@@ -70,8 +94,7 @@ if bridge:
     try:
         sock.connect((bridge["ip"], bridge["port"]))
         sock.sendall(raw)
-        data = sock.recv(512)
-        result["bridge_request"]["absolute"] = data.decode("utf-8", "replace")[:300]
+        result["bridge_request"]["absolute"] = read_http(sock)
     except Exception as exc:
         result["bridge_request"]["absolute"] = f"{type(exc).__name__}: {exc}"
     finally:
@@ -85,8 +108,7 @@ if bridge:
     try:
         sock.connect((bridge["ip"], bridge["port"]))
         sock.sendall(connect_req)
-        data = sock.recv(512)
-        result["bridge_request"]["connect"] = data.decode("utf-8", "replace")[:300]
+        result["bridge_request"]["connect"] = read_http(sock)
     except Exception as exc:
         result["bridge_request"]["connect"] = f"{type(exc).__name__}: {exc}"
     finally:
