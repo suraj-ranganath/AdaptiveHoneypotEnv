@@ -1,21 +1,32 @@
-# AdaptiveHoneypotEnv — default demo run configuration.
-# Contract for the implementation (see docs/DESIGN.md §12). Resolved into an
-# immutable manifest at run start. Model ids are not guaranteed to stay current.
+# Proposed demo profile for DESIGN.md v1.1; no runner exists yet.
+# Cloud agents implement this contract only after receiving a build task.
+design_version: "1.1"
 scenario: secret_store_ops/v1
 seed: 17
+integration: agentenv  # protocol adapter around the shared episode core
 
 attacker:
-  model: z-ai/glm-5.3-flash     # via OpenRouter (OpenAI-compatible); base_url + key from env
-  team: trio                    # solo | trio  (same team-total budget either way)
-  awareness: naive              # naive | deception_aware
+  model: z-ai/glm-5.3-flash
+  team: trio  # solo | trio; shared team-total budgets
+  awareness: naive  # naive | deception_aware
+  objective_mode: workflow  # discover the account from repository evidence
 
 defender:
-  policy: adaptive_llm          # no_decoy | random | heuristic | oracle_goal | adaptive_llm
+  policy: adaptive_llm  # no_decoy | random | heuristic | oracle_goal | adaptive_llm
   model: z-ai/glm-5.3-flash
-  track: contextual             # catalogue | contextual
+  track: contextual  # catalogue | contextual
 
-# Provider wiring (env, never committed):
-#   OPENAI_BASE_URL=https://openrouter.ai/api/v1
-#   OPENAI_API_KEY=<OpenRouter key>   # held by the controller only; actors never see it
-# Switches: OpenRouter ":free" models, or OpenCode Zen (https://opencode.ai/zen/v1,
-#   OPENCODE_API_KEY) — confirm exact free model ids via /zen/v1/models first.
+metrics:
+  primary: detection_before_compromise
+  # Lead time, compromise, attacker cost, and benign disruption stay separate.
+
+runtime:
+  max_cost_usd: null  # operator must set a numeric limit before live model calls
+  # Task budgets live in the versioned scenario; external cost cutoff truncates.
+
+# Provider key is loaded by the trusted controller from existing secret storage/env.
+# Never put key bytes in this file, a resolved manifest, logs, or actor prompts.
+# Default base URL: https://openrouter.ai/api/v1
+# Configure provider routing/generation limits explicitly before scored runs.
+# Zen is optional: https://opencode.ai/zen/v1; catalogue checked during build.
+# No full benchmark or adaptation ablation is required for demo acceptance.
