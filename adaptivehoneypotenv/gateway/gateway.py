@@ -610,13 +610,14 @@ class ToolGateway:
             parsed.path,
             [(header.name, header.value) for header in parsed.headers],
             profile=self._profile,
+            query=parsed.query,
         )
         if not decision.allowed:
             return _service_rejection(decision.reason or "unknown_destination", method)
         try:
             response = self._upstream.exchange(
                 method=parsed.method,
-                path=parsed.path,
+                path=_service_target(parsed.path, parsed.query),
                 headers=tuple((header.name, header.value) for header in parsed.headers),
                 body=parsed.body.encode("utf-8"),
                 actor_id=actor_id,
@@ -1046,7 +1047,10 @@ def _policy_reason(
     headers = _header_pairs(arguments.get("headers", []))
     if headers is None:
         return None
-    decision = classify_service_request(method, path, headers, profile=profile)
+    query = arguments.get("query", "")
+    if not isinstance(query, str):
+        return None
+    decision = classify_service_request(method, path, headers, profile=profile, query=query)
     if decision.allowed:
         return None
     return decision.reason
@@ -1074,6 +1078,14 @@ def _service_method(arguments: Mapping[str, Any]) -> str | None:
     if method in {"GET", "POST"}:
         return str(method)
     return None
+
+
+def _service_target(path: str, query: str) -> str:
+    """Request target. A non-empty query is the caller's text, not a new key."""
+
+    if query == "":
+        return path
+    return f"{path}?{query}"
 
 
 def _service_rejection(reason: str, method: HttpMethodCategory) -> _Result:

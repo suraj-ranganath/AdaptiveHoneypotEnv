@@ -2,8 +2,9 @@
 
 The gateway dials one loopback bridge and never follows redirects. Model
 headers cannot supply the controller token or replace the bound actor id.
-The stdlib HTTP connection is imported as ``from http import client`` so the
-transport stays in the standard library without a third-party HTTP stack.
+This module imports the stdlib HTTP client and sends the request target
+unchanged. It does not add a query string. The trusted launcher opens its
+own loopback relay; every other package module may not import this client.
 """
 
 from __future__ import annotations
@@ -75,7 +76,7 @@ class LoopbackFixedUpstream:
     ) -> UpstreamResponse:
         if method not in {"GET", "POST"}:
             raise UpstreamExchangeError("invalid_method", uncertain=False)
-        if "://" in path or path.startswith("//") or not path.startswith("/"):
+        if "://" in path or path.startswith("//") or not path.startswith("/") or "#" in path:
             raise UpstreamExchangeError("invalid_path", uncertain=False)
         outbound = _bound_headers(
             headers,

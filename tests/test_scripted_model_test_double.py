@@ -104,7 +104,6 @@ def test_package_does_not_read_provider_env_or_import_a_network_client() -> None
         "import urllib",
         "import requests",
         "import socket",
-        "import http.client",
         "import aiohttp",
         "import openai",
         "from httpx",
@@ -130,6 +129,16 @@ def test_package_does_not_read_provider_env_or_import_a_network_client() -> None
     }
     send_path_only = {"import httpx", "from httpx", "os.environ"}
     provider_reads = ("OPENROUTER_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "getenv(")
+    # Both stdlib spellings, plus ``from http.client import``. The loopback
+    # bridge client may use them. The launcher is already outside this scan
+    # because it opens the relay. Every other module, including the adapter,
+    # still may not.
+    http_client_spellings = (
+        "import http.client",
+        "from http import client",
+        "from http.client import",
+    )
+    bridge = Path("adaptivehoneypotenv/gateway/upstream.py")
     assert "os.environ.get(PROVIDER_CREDENTIAL_ENV_VAR)" in send_path.read_text(encoding="utf-8")
     for path in Path("adaptivehoneypotenv").rglob("*.py"):
         text = path.read_text(encoding="utf-8")
@@ -141,6 +150,9 @@ def test_package_does_not_read_provider_env_or_import_a_network_client() -> None
             if path == send_path and banned in send_path_only:
                 continue
             assert banned not in text, f"{path} contains {banned}"
+        if path != bridge:
+            for banned in http_client_spellings:
+                assert banned not in text, f"{path} contains {banned}"
         if path not in key_name_sites:
             for banned in provider_reads:
                 assert banned not in text, f"{path} contains {banned}"
