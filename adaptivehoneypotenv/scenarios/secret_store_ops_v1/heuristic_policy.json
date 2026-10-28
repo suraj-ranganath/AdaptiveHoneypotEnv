@@ -1,0 +1,63 @@
+{
+  "asset_version": "secret_store_ops_v1.heuristic.1",
+  "scenario_id": "secret_store_ops/v1",
+  "match": "case-insensitive-substring",
+  "context_rule": "Select the latest observation whose search text or path matches exactly one context. If every observation is ambiguous or matches nothing, wait.",
+  "near_activity": "On that observation's path, move the fallback row for the matching slot to the front. Then choose the first row whose slot is unoccupied. The row's template is the fixed compatible template and its description_id is the fixed catalogue entry.",
+  "keywords": {
+    "release": ["release", "publisher", "rollout", "checklist", "notifier"],
+    "backup": ["backup", "vault", "restore", "handover", "rotation"]
+  },
+  "activity_path_slots": [
+    {"prefix": "ops/ci/", "slot_id": "ci_records"},
+    {"prefix": "ops/deploy/", "slot_id": "deployment_notes"},
+    {"prefix": "ops/runbooks/", "slot_id": "runbooks"},
+    {"prefix": "ops/integrations/", "slot_id": "integration_records"}
+  ],
+  "fallback": {
+    "release": [
+      {
+        "slot_id": "ci_records",
+        "template_id": "ci_credential_record",
+        "description_id": "note.archived_cache"
+      },
+      {
+        "slot_id": "deployment_notes",
+        "template_id": "ci_credential_record",
+        "description_id": "note.pipeline_copy"
+      },
+      {
+        "slot_id": "runbooks",
+        "template_id": "runbook_reference",
+        "description_id": "note.maintenance"
+      },
+      {
+        "slot_id": "integration_records",
+        "template_id": "integration_config",
+        "description_id": "note.service_binding"
+      }
+    ],
+    "backup": [
+      {
+        "slot_id": "deployment_notes",
+        "template_id": "ci_credential_record",
+        "description_id": "note.job_cache"
+      },
+      {
+        "slot_id": "integration_records",
+        "template_id": "integration_config",
+        "description_id": "note.migration_binding"
+      },
+      {
+        "slot_id": "runbooks",
+        "template_id": "runbook_reference",
+        "description_id": "note.migration_note"
+      },
+      {
+        "slot_id": "ci_records",
+        "template_id": "ci_credential_record",
+        "description_id": "note.export_copy"
+      }
+    ]
+  }
+}

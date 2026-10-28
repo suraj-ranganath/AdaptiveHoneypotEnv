@@ -1,1 +1,1 @@
-"""secret_store_ops/v1 scenario package. Phase 0 contains no fixture bytes."""
+"""secret_store_ops/v1 scenario package: workspace, fixtures, and approved descriptions."""

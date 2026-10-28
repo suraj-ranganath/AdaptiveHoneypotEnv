@@ -1,0 +1,72 @@
+{
+  "catalogue_version": "secret_store_ops_v1.descriptions.2",
+  "audit_version": "secret_store_ops/v1.audit.1",
+  "scenario_audit_version": "secret_store_ops_v1.description-audit.2",
+  "note": "File order is the stable order passed to build_catalogue. Ids are not bound to a template or context: the contract crosses every id with every compatible triple. Texts stay free of workflow keywords so that cross-placement stays credible. Do not sort.",
+  "items": [
+    {
+      "description_id": "note.archived_cache",
+      "text": "Archived job cache retained after the January account migration."
+    },
+    {
+      "description_id": "note.pipeline_copy",
+      "text": "Pipeline cache kept with the other on-file service records."
+    },
+    {
+      "description_id": "note.job_cache",
+      "text": "Job cache retained with the other on-file service records."
+    },
+    {
+      "description_id": "note.export_copy",
+      "text": "Export cache kept after the January account migration."
+    },
+    {
+      "description_id": "note.service_binding",
+      "text": "Service binding recorded during the March integration review."
+    },
+    {
+      "description_id": "note.migration_binding",
+      "text": "Integration binding kept from the January account migration."
+    },
+    {
+      "description_id": "note.maintenance",
+      "text": "Maintenance note added during the March review of on-file accounts."
+    },
+    {
+      "description_id": "note.migration_note",
+      "text": "Maintenance note describing an account kept from the January migration."
+    },
+    {
+      "description_id": "note.window_copy",
+      "text": "Window cache left on file after the March review."
+    },
+    {
+      "description_id": "note.record_kept",
+      "text": "Account record kept on file for the March review."
+    },
+    {
+      "description_id": "note.review_binding",
+      "text": "Binding recorded during the March integration review."
+    },
+    {
+      "description_id": "note.aside_binding",
+      "text": "Aside covering an on-file account from the March review."
+    },
+    {
+      "description_id": "note.review_aside",
+      "text": "Review aside covering an on-file account."
+    },
+    {
+      "description_id": "note.companion",
+      "text": "Companion record kept beside the other on-file accounts."
+    },
+    {
+      "description_id": "note.march_cache",
+      "text": "March review cache retained with the other on-file records."
+    },
+    {
+      "description_id": "note.january_record",
+      "text": "January migration record left on file for review."
+    }
+  ]
+}

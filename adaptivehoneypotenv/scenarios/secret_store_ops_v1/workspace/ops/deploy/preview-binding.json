@@ -1,0 +1,11 @@
+{
+  "service": "secret-storage",
+  "context": "preview",
+  "status": "on-file",
+  "opened": "2025-11-04",
+  "reviewed": "2026-03-12",
+  "username": "[[release_preview.username]]",
+  "email": "[[release_preview.email]]",
+  "credential_record": "ops/ci/preview-publisher.properties",
+  "note": "Preview binding. Login material stays in the publisher cache. Not the in-service release mapping."
+}

@@ -1,0 +1,11 @@
+{
+  "service": "secret-storage",
+  "context": "release",
+  "status": "in-service",
+  "opened": "2026-01-20",
+  "reviewed": "2026-03-12",
+  "username": "[[release_current.username]]",
+  "email": "[[release_current.email]]",
+  "credential_record": "ops/deploy/release-window.md",
+  "note": "Release notification uses the in-service release window. Login material is not stored in this binding."
+}

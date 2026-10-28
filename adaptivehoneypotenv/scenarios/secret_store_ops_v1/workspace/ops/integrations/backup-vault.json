@@ -1,0 +1,11 @@
+{
+  "service": "secret-storage",
+  "context": "backup",
+  "status": "in-service",
+  "opened": "2026-01-20",
+  "reviewed": "2026-03-12",
+  "username": "[[backup_current.username]]",
+  "email": "[[backup_current.email]]",
+  "credential_record": "ops/deploy/backup-handover.properties",
+  "note": "In-service backup workflow binding. Login material stays in the credential record."
+}
