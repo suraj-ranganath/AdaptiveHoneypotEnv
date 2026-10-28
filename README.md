@@ -28,7 +28,7 @@ Our goal is to build a simple, reproducible environment that supports both reinf
 
 ## The hackathon demo
 
-An operator watches three scheduled attacker sessions explore a synthetic repository and a real local secret-storage service. An adaptive defender observes their searches and reads, creates a coherent credential artifact backed by a real canary account, and places it in the workspace. The UI shows the actual deployment, tool calls, messages, and verified result.
+An operator watches three attacker sessions, acting together in lockstep rounds, explore a synthetic repository and a real local secret-storage service. An adaptive defender observes their searches and reads, creates a coherent credential artifact backed by a real canary account, and places it in the workspace. The attackers coordinate through a team messageboard they choose when to check, which the defender cannot see. The UI shows the actual deployment, tool calls, messageboard posts, and verified result.
 
 **The primary outcome is detection before genuine compromise.** A canary alert does not stop the team or prove prevention. Delay and compromise reduction are measured separately. A saved fallback is labeled `RECORDED REPLAY`; a live episode may succeed or fail honestly.
 
@@ -36,7 +36,7 @@ The demo uses templates and bounded contextual text. Training defender weights, 
 
 ## Architecture and specifications
 
-**Approved architecture: AgentEnv around one shared custom core.** AgentEnv supplies the environment protocol and integration with tasks/artifacts. Our core owns the scenario, defender transitions, scheduled attacker sessions, deterministic compiler, verifier, and event log. The same dynamics serve the live observer, evaluation, and a Gymnasium wrapper.
+**Approved architecture: AgentEnv around one shared custom core.** AgentEnv supplies the environment protocol and integration with tasks/artifacts. Our core owns the scenario, defender transitions, lockstep attacker sessions, deterministic compiler, verifier, and event log. The same dynamics serve the live observer, evaluation, and a Gymnasium wrapper.
 
 Read in this order:
 

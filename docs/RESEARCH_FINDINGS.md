@@ -4,7 +4,7 @@
 
 ## 1. Research question and prior work
 
-Our proposed contribution is an environment where a defender creates discoverable credential artifacts backed by real accounts during an episode, conditioned on observed activity, and is evaluated against scheduled attacker teams through a reusable learning interface. The reviewed sources motivate this combination, but do not prove no prior system has explored it. Avoid absolute claims such as “RL placement has never been tested against LLM agents.”
+Our proposed contribution is an environment where a defender creates discoverable credential artifacts backed by real accounts during an episode, conditioned on observed activity, and is evaluated against lockstep attacker teams through a reusable learning interface. The reviewed sources motivate this combination, but do not prove no prior system has explored it. Avoid absolute claims such as “RL placement has never been tested against LLM agents.”
 
 - **AgentTrap** uses stateful response deception against autonomous penetration-testing agents. Its reported real-target success rate changes from 95.8% to 79.2% in its setting. This supports studying adaptive deception, but its intervention is response-based and includes mechanisms outside our inert-artifact scope. [Paper](https://arxiv.org/html/2610.02869v1).
 - **Tracebit** studies actual canaries in an AWS range. It reports early warning in 95.9% of canary-present runs reaching admin, with a median eight-minute gap. Canary presence alone did not significantly reduce full compromise; disclosure changed outcomes. Thus neither real-backed canaries nor warning-before-compromise is novel by itself, and detection must remain distinct from prevention. This is a vendor study with exclusions and a different harness. [Specific study](https://agentic.tracebit.com/ai-agents-canaries/).
@@ -39,7 +39,7 @@ These are our design implications, not experimentally established rules for this
 - Discoverability comes from actual directory listings, search, and internal references. An incoming reference from a pre-existing file is not mandatory for every deployment. The runbook template has a companion reference without editing the genuine route.
 - Mid-episode file appearance can be noticed even if timestamps are absent. Do not claim perfect concealment or retroactively alter tool observations. Measure this limitation with deception-aware agents.
 - Inspect search ranking, clipping, route length, and the first six-attempt window. If a capable attacker routinely finishes before the second defender decision, the fixture does not meaningfully test adaptation.
-- A scheduled trio on a shared budget tests a bounded coordination setting. It cannot establish results for large concurrent swarms.
+- A lockstep trio on a shared budget tests a bounded coordination setting with simultaneous decisions. It cannot establish results for large free-running swarms.
 
 Honeypatch is a useful declarative-text reference, but its own documentation labels it a proof of concept. It does not provide our real-account compiler transaction. [Honeypatch documentation](https://github.com/dynatrace-oss/honeyquest/blob/main/docs/HONEYPATCH.md).
 
