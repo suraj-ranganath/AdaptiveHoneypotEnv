@@ -21,7 +21,7 @@ metrics:
   # Lead time, compromise, attacker cost, and benign disruption stay separate.
 
 runtime:
-  max_cost_usd: null  # operator must set a numeric limit before live model calls
+  max_cost_usd: 5.0  # USD, total for the run. The WS4 model adapter must enforce it.
   # Task budgets live in the versioned scenario; external cost cutoff truncates.
 
 # Provider key is loaded by the trusted controller from existing secret storage/env.

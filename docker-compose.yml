@@ -1,0 +1,36 @@
+# Phase 0 placeholder topology.
+# TODO(WS1): replace target and bridge with the pinned SecretStorage app
+# and the fixed-upstream HTTP bridge.
+# The target publishes no ports. Neither service receives the Docker socket.
+# The manual profile keeps `docker compose up` from starting these placeholders.
+
+name: adaptivehoneypotenv
+
+networks:
+  internal:
+    internal: true
+
+services:
+  target:
+    profiles: ["manual"]
+    image: busybox:1.36.1
+    command: ["sleep", "infinity"]
+    networks: [internal]
+    read_only: true
+    init: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    # TODO(WS1): non-root user, pinned image digest, tmpfs for the runtime
+    # database, and CPU/memory/PID limits. Do not add a ports key.
+
+  bridge:
+    profiles: ["manual"]
+    image: busybox:1.36.1
+    command: ["sleep", "infinity"]
+    networks: [internal]
+    read_only: true
+    init: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    # TODO(WS1): fixed-upstream bridge. A controller port, if published later,
+    # binds to loopback only. Do not publish a target port.
