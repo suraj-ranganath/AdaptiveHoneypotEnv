@@ -33,6 +33,10 @@ Our goal is to build a simple, reproducible environment that supports both reinf
 - **RL and evaluation:** a reproducible environment for training defender strategies and benchmarking defender models.
 - **Visual interface:** live views of attacker and defender behavior.
 
+## Implementation plan
+
+The full implementation specification is in [`docs/IMPLEMENTATION_HANDOFF.md`](docs/IMPLEMENTATION_HANDOFF.md). It covers the task design, the template compiler, the environment loop, scoring, deployment, the observer UI and the build gates.
+
 ## Getting started
 
 Coming soon.
