@@ -1,6 +1,6 @@
 UV ?= uv
 
-.PHONY: setup test lint typecheck smoke-live
+.PHONY: setup test lint typecheck smoke-live gate-a gate-b observe
 
 setup:
 	$(UV) sync --frozen --all-groups
@@ -22,3 +22,12 @@ smoke-live:
 		exit 2; \
 	fi
 	$(UV) run python -m adaptivehoneypotenv.models.smoke
+
+gate-a:
+	$(UV) run python -m adaptivehoneypotenv.cli gate-a
+
+gate-b:
+	$(UV) run python -m adaptivehoneypotenv.cli gate-b
+
+observe:
+	$(UV) run python -m adaptivehoneypotenv.cli observe
