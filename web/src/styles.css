@@ -166,6 +166,21 @@ h1, h2, h3, h4, p { margin: 0; }
   font-weight: 500;
   line-height: 0.9;
 }
+.attempt-chip {
+  display: flex;
+  flex-direction: column;
+}
+.attempt-chip span {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.attempt-chip strong {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 28px;
+  line-height: 1;
+}
 
 .plates {
   position: absolute;
@@ -265,6 +280,8 @@ h1, h2, h3, h4, p { margin: 0; }
 .post-meta { display: block; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .post-text { display: block; margin-top: 4px; white-space: pre-wrap; }
 .post-read { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+.sim-board .post-text { color: var(--ink); }
+.sim-board .post-read { color: #735e2a; }
 
 .inspector { flex: 1.15; overflow: auto; padding: 12px 14px 18px; border-top: 1px solid var(--line); }
 .inspector h2 { font-family: "Newsreader", Georgia, serif; font-size: 22px; font-weight: 500; }
@@ -291,6 +308,21 @@ h1, h2, h3, h4, p { margin: 0; }
   color: var(--ink);
 }
 .muted { color: var(--muted); margin-top: 8px; }
+.sim-inspector .sim-title {
+  margin-top: 8px;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 24px;
+  line-height: 1.2;
+}
+.sim-inspector .sim-subtitle { margin-top: 4px; color: var(--muted); }
+.sim-baseline {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px dashed #b9aa86;
+  background: #f8f4e9;
+}
+.sim-baseline h3 { margin-top: 0; }
+.sim-baseline p { font-size: 13px; color: var(--ink); }
 
 .sentence {
   padding: 8px 22px 0;
@@ -325,6 +357,14 @@ h1, h2, h3, h4, p { margin: 0; }
 .counter.separate { border-left: 1px solid var(--line); padding-left: 12px; }
 .funnel, .outcome { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
 .outcome { color: var(--ink); }
+.sim-counters {
+  background: linear-gradient(180deg, rgba(248, 241, 216, 0.5), transparent 65%);
+}
+.sim-formula {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--ink);
+}
 
 .timeline {
   display: grid;
@@ -355,6 +395,34 @@ h1, h2, h3, h4, p { margin: 0; }
 .tick-alert { background: var(--alert); }
 .tick-compromise { background: var(--compromise); }
 .tick-deploy { background: var(--brass); }
+.sim-timeline {
+  grid-template-columns: minmax(240px, auto) minmax(120px, 1fr) minmax(240px, 360px);
+}
+.sim-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.speed-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.speed-pick select {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 4px 6px;
+}
+.loop-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
 .follow {
   position: fixed;
   right: 22px;
@@ -447,6 +515,7 @@ h1, h2, h3, h4, p { margin: 0; }
   .counters { grid-template-columns: 1fr 1fr; }
   .counter.separate { border-left: 0; padding-left: 0; }
   .timeline { grid-template-columns: 1fr; }
+  .sim-timeline { grid-template-columns: 1fr; }
   .intro-card h1 { font-size: 28px; }
 }
 

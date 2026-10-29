@@ -24,7 +24,7 @@ export function resolvePresentation(input: {
       developmentData: false,
       liveClaimBlocked: false,
       title: "Simulation",
-      detail: "Illustrative scripted episode, not a recorded run.",
+      detail: "Illustrative scripted episode. Not live. Not a recorded run.",
     };
   }
 
