@@ -97,6 +97,8 @@ def test_scripted_double_returns_tool_calls_usage_finish_reason_and_refusal() ->
 
 
 def test_package_does_not_read_provider_env_or_import_a_network_client() -> None:
+    """Only the adapter send path may read the provider env or import httpx."""
+
     banned_imports = (
         "import httpx",
         "import urllib",
@@ -117,7 +119,18 @@ def test_package_does_not_read_provider_env_or_import_a_network_client() -> None
     # the Docker API. Every other module stays free of network clients, and
     # the launcher itself still must not read a provider credential.
     launcher = Path("adaptivehoneypotenv/deployment.py")
+    # The send path is the only module that may import httpx or touch
+    # os.environ for the provider key. Contract modules name that variable;
+    # they do not read it.
+    send_path = Path("adaptivehoneypotenv/models/adapter.py")
+    key_name_sites = {
+        send_path,
+        Path("adaptivehoneypotenv/contracts/limits.py"),
+        Path("adaptivehoneypotenv/contracts/manifest.py"),
+    }
+    send_path_only = {"import httpx", "from httpx", "os.environ"}
     provider_reads = ("OPENROUTER_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "getenv(")
+    assert "os.environ.get(PROVIDER_CREDENTIAL_ENV_VAR)" in send_path.read_text(encoding="utf-8")
     for path in Path("adaptivehoneypotenv").rglob("*.py"):
         text = path.read_text(encoding="utf-8")
         if path == launcher:
@@ -125,4 +138,9 @@ def test_package_does_not_read_provider_env_or_import_a_network_client() -> None
                 assert banned not in text, f"{path} contains {banned}"
             continue
         for banned in banned_imports:
+            if path == send_path and banned in send_path_only:
+                continue
             assert banned not in text, f"{path} contains {banned}"
+        if path not in key_name_sites:
+            for banned in provider_reads:
+                assert banned not in text, f"{path} contains {banned}"
