@@ -12,7 +12,7 @@ Design authority remains [DESIGN.md](DESIGN.md) v1.1. This file records the sche
 | Safe defender observation and padded arrays | `adaptivehoneypotenv/contracts/observations.py` | `1.0.0` |
 | Event envelope and role projections | `adaptivehoneypotenv/contracts/events.py` | `1.0.0` |
 | Transition result, reward, termination | `adaptivehoneypotenv/contracts/transition.py` | `1.0.0` |
-| Seven attacker tools and OpenAI export | `adaptivehoneypotenv/contracts/tools.py` | `1.0.0` |
+| Seven attacker tools and OpenAI export | `adaptivehoneypotenv/contracts/tools.py` | `1.0.1` |
 | Resolved run manifest and demo profile | `adaptivehoneypotenv/contracts/manifest.py` | `1.0.0` |
 | Model completion interface | `adaptivehoneypotenv/model_api.py` | `1.0.0` |
 
@@ -92,6 +92,8 @@ Parallel generated-token cap for one of `k` calls is `min(per_call_cap, remainin
 ## Attacker tools
 
 Exactly `list_directory`, `search_files`, `read_file`, `request_service`, `post_to_messageboard`, `read_messageboard`, and `finish`. `openai_tool_schemas` exports OpenAI tool-calling JSON schema. The malicious profile offers only `POST /login` and `GET /get_secret`.
+
+Tool schema `1.0.1` keeps that allowlist as method plus exact path. Honeyval `GET /get_secret` takes one query parameter, `username` (`sec/app.py` at pin `86272d8`). The `query` argument is optional and defaults to empty. The only accepted non-empty query is `username=<value>`, where the value is 1–64 characters from `A-Za-z0-9_-`. Any other key, a repeated key, a fragment, percent-encoding, `+`, or a query on `/login`, `/register`, or `/set_secret` is rejected (`invalid_query` or `unexpected_query`). A `?` or `#` inside `path` is `invalid_path` and is not decoded into a query. The gateway forwards a non-empty query verbatim as `path?query` and does not add a username itself. An empty query is sent as the path alone.
 
 Request bounds: listing is a gateway cap of 100; search query is 1–256 characters with gateway caps of 100 hits and 16 KiB; reads are 1–200 lines with a 16 KiB delivery cap; HTTP bodies and header blocks are 16 KiB; posts are 2,000 characters; board reads request `after_post_id >= 0` and the gateway returns at most 20 posts and 16 KiB.
 
