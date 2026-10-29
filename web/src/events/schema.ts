@@ -154,6 +154,14 @@ function safeInt(value: unknown): number | null {
   return value;
 }
 
+// Unix nanoseconds and long monotonic clocks sit above Number.MAX_SAFE_INTEGER.
+// They remain integers; only the low bits are not exact in IEEE-754.
+function clockInt(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return null;
+  if (!Number.isInteger(value)) return null;
+  return value;
+}
+
 function decimalCents(value: unknown): number | null {
   let text: string;
   if (typeof value === "number") {
@@ -357,8 +365,8 @@ export function parseObserverEvent(raw: unknown): ParseResult {
   const roundIndex = safeInt(raw.round_index);
   const attemptIndex = safeInt(raw.attempt_index);
   const worldVersion = safeInt(raw.world_version);
-  const duration = safeInt(raw.monotonic_duration_ns);
-  const wall = safeInt(raw.wall_time_unix_ns);
+  const duration = clockInt(raw.monotonic_duration_ns);
+  const wall = clockInt(raw.wall_time_unix_ns);
   if (roundIndex === null || roundIndex < 0) return { ok: false, error: "round_index must be an integer ≥ 0", sequence, kind: kindPeek };
   if (attemptIndex === null || attemptIndex < 0) {
     return { ok: false, error: "attempt_index must be an integer ≥ 0", sequence, kind: kindPeek };

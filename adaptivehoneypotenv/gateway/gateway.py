@@ -13,7 +13,7 @@ import json
 import re
 import threading
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -175,6 +175,7 @@ class ToolGateway:
         self._attempts = AttemptLedger()
         self._tokens = TokenLedger()
         self._finished: set[str] = set()
+        self._listeners: list[Callable[[Event], None]] = []
         self._episode_valid = True
         self._invalid_reason: str | None = None
         self._lock = threading.RLock()
@@ -232,6 +233,65 @@ class ToolGateway:
             if world_version < self._world_version:
                 raise GatewayError("world version decreased")
             self._world_version = world_version
+
+    def set_workspace(self, workspace: Path) -> None:
+        """Point later tool reads at a published workspace version.
+
+        The pointer is controller state. The directory must be real, not a
+        symlink actors could be asked to resolve.
+        """
+
+        with self._lock:
+            root = Path(workspace)
+            if root.is_symlink() or not root.is_dir():
+                raise GatewayError("workspace")
+            self._root = root
+
+    def add_fixture_literals(self, literals: tuple[str, ...]) -> None:
+        """Extend the search-term redaction list. Values are not returned."""
+
+        with self._lock:
+            seen = set(self._fixture_literals)
+            extra = tuple(item for item in literals if item not in seen)
+            self._fixture_literals = self._fixture_literals + extra
+
+    def next_sequence(self) -> int:
+        with self._lock:
+            return self._journal.next_sequence()
+
+    def controller_store(self, data: bytes) -> PayloadRef:
+        with self._lock:
+            return self._journal.store(data)
+
+    def controller_append(self, event: Event) -> None:
+        """Append one controller event on the same journal as tool events."""
+
+        with self._lock:
+            try:
+                self._journal.append(event)
+            except JournalWriteError as exc:
+                self._invalidate("journal_write_failed")
+                raise GatewayError("journal_write_failed") from exc
+            self._fanout(event)
+
+    def invalidate(self, reason: str) -> None:
+        with self._lock:
+            self._invalidate(reason)
+
+    @property
+    def workspace(self) -> Path:
+        with self._lock:
+            return self._root
+
+    @property
+    def journal_directory(self) -> Path | None:
+        with self._lock:
+            return self._journal.directory
+
+    @property
+    def finished_actors(self) -> frozenset[str]:
+        with self._lock:
+            return frozenset(self._finished)
 
     def account_generated_tokens(
         self,
@@ -968,8 +1028,31 @@ class ToolGateway:
             "request_id": f"req-{sequence}",
         }
 
+    def subscribe(self, listener: Callable[[Event], None]) -> tuple[Event, ...]:
+        """Register a listener and return the journal snapshot under one lock.
+
+        Listeners run on the appending thread and must only enqueue. The
+        simulation does not wait on a client.
+        """
+
+        with self._lock:
+            self._listeners.append(listener)
+            return self._journal.events
+
+    def unsubscribe(self, listener: Callable[[Event], None]) -> None:
+        with self._lock:
+            self._listeners = [item for item in self._listeners if item is not listener]
+
+    def _fanout(self, event: Event) -> None:
+        for listener in list(self._listeners):
+            try:
+                listener(event)
+            except Exception:
+                continue
+
     def _append(self, event: Event) -> None:
         self._journal.append(event)
+        self._fanout(event)
 
     def _precheck(self, actor_id: str, round_index: int) -> ToolDelivery | None:
         self._require_valid()

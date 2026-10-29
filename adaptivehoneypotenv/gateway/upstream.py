@@ -109,6 +109,39 @@ class LoopbackFixedUpstream:
         )
 
 
+class ActorRouteUpstream:
+    """Prefix approved actor requests with ``/actor``.
+
+    The bridge only forwards ``/actor`` and ``/setup``. Setup stays on the
+    launcher's private client. This wrapper does not choose a destination,
+    follow redirects, or attach a provider credential.
+    """
+
+    def __init__(self, inner: FixedUpstream) -> None:
+        self._inner = inner
+
+    def exchange(
+        self,
+        *,
+        method: str,
+        path: str,
+        headers: tuple[tuple[str, str], ...],
+        body: bytes,
+        actor_id: str,
+        controller_token: str,
+    ) -> UpstreamResponse:
+        if "://" in path or path.startswith("//") or not path.startswith("/") or "#" in path:
+            raise UpstreamExchangeError("invalid_path", uncertain=False)
+        return self._inner.exchange(
+            method=method,
+            path="/actor" + path,
+            headers=headers,
+            body=body,
+            actor_id=actor_id,
+            controller_token=controller_token,
+        )
+
+
 def _bound_headers(
     headers: tuple[tuple[str, str], ...],
     *,

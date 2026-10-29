@@ -43,6 +43,10 @@ class EpisodeJournal:
     def next_sequence(self) -> int:
         return len(self._events)
 
+    @property
+    def directory(self) -> Path | None:
+        return self._directory
+
     def payload(self, ref_id: str) -> bytes:
         return self._payloads[ref_id]
 
