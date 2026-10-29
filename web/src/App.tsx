@@ -560,6 +560,7 @@ export function App() {
 
       <div className="stage" ref={stageRef}>
         <div className="workspace-col">
+          <div className="workspace-hud">
           <div className="meter-row">
             <div className="round-chip">
               <span>Round</span>
@@ -593,6 +594,7 @@ export function App() {
               {scene.compromise ? <p className="plate compromise">Genuine compromise</p> : null}
             </div>
           ) : null}
+          </div>
           <Workspace stageRef={stageRef} model={model} onSelect={pin} onAnchors={setMapAnchors} />
           <p className="projection-note">
             {requested === "simulation"

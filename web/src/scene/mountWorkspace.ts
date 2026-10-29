@@ -97,6 +97,8 @@ export async function mountWorkspace(host: HTMLElement, handlers: MountHandlers)
   const tokenViews = new Map<string, Container>();
   let model: WorkspaceModel | null = null;
   let origin = { x: 0, y: 0 };
+  let viewScale = 1;
+  let viewOffset = { x: 0, y: 0 };
   let animating = false;
   let animStart = 0;
   let reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -107,21 +109,41 @@ export async function mountWorkspace(host: HTMLElement, handlers: MountHandlers)
   motionQuery?.addEventListener?.("change", onMotion);
 
   function layout() {
-    const width = host.clientWidth || 800;
-    const height = host.clientHeight || 520;
-    const left = -TILE_W;
-    const right = TILE_W * 1.55;
-    const top = -HALF_H - 10;
-    const bottom = TILE_H * 2.15 + 86;
-    origin = {
-      x: (width - (right - left)) / 2 - left,
-      y: Math.max(36, (height - (bottom - top)) / 2 - top),
+    const width = Math.max(1, host.clientWidth || 800);
+    const height = Math.max(1, host.clientHeight || 520);
+    // Local bounds around the source-tile center. Includes decoy cards above the
+    // top tile, the defender caption, bench labels, and token names.
+    const left = -TILE_W * 1.55;
+    const right = TILE_W * 1.62;
+    const top = -96;
+    const bottom = 386;
+    const contentW = right - left;
+    const contentH = bottom - top;
+    const padX = 12;
+    const padY = 10;
+    viewScale = Math.min(1, (width - padX * 2) / contentW, (height - padY * 2) / contentH);
+    if (!Number.isFinite(viewScale) || viewScale <= 0) viewScale = 1;
+    viewOffset = {
+      x: (width - contentW * viewScale) / 2 - left * viewScale,
+      y: (height - contentH * viewScale) / 2 - top * viewScale,
+    };
+    world.scale.set(viewScale);
+    tokenLayer.scale.set(viewScale);
+    world.position.set(viewOffset.x, viewOffset.y);
+    tokenLayer.position.set(viewOffset.x, viewOffset.y);
+    origin = { x: 0, y: 0 };
+  }
+
+  function toHost(point: { x: number; y: number }): { x: number; y: number } {
+    return {
+      x: point.x * viewScale + viewOffset.x,
+      y: point.y * viewScale + viewOffset.y,
     };
   }
 
   function centerOf(stand: StandId): { x: number; y: number } {
-    if (stand === "bench") return { x: origin.x + 8, y: origin.y + TILE_H * 2.05 + 72 };
-    if (stand === "withheld") return { x: origin.x + 8, y: origin.y + TILE_H * 2.05 + 8 };
+    if (stand === "bench") return { x: origin.x + 8, y: origin.y + 328 };
+    if (stand === "withheld") return { x: origin.x + 8, y: origin.y + 248 };
     if (stand === "ops") {
       const rooms: AreaId[] = ["ci", "deploy", "runbooks", "integrations"];
       const pts = rooms.map((id) => centerOf(id));
@@ -254,14 +276,14 @@ export async function mountWorkspace(host: HTMLElement, handlers: MountHandlers)
   function deploymentCard(deployment: DeploymentModel, index: number, count: number): Container {
     const card = new Container();
     const shift = (index - (count - 1) / 2) * 28;
-    card.position.set(shift, -58);
+    card.position.set(shift, -52);
     const g = new Graphics();
-    g.roundRect(-16, -22, 34, 44, 3).fill({ color: 0xfffdf8 });
-    g.roundRect(-16, -22, 34, 44, 3).stroke({
+    g.roundRect(-30, -20, 60, 42, 3).fill({ color: 0xfffdf8 });
+    g.roundRect(-30, -20, 60, 42, 3).stroke({
       color: deployment.engaged ? ALERT_HEX : BRASS_HEX,
       width: deployment.selected ? 3 : 2,
     });
-    g.poly([-16, -22, -4, -22, -16, -10]).fill({ color: BRASS_HEX });
+    g.poly([-30, -20, -16, -20, -30, -6]).fill({ color: BRASS_HEX });
     g.eventMode = "static";
     g.cursor = "pointer";
     g.on("pointertap", (event: FederatedPointerEvent) => {
@@ -273,13 +295,13 @@ export async function mountWorkspace(host: HTMLElement, handlers: MountHandlers)
       text: deployment.engaged ? "Engaged" : "Decoy",
       style: {
         fill: deployment.engaged ? ALERT_HEX : BRASS_HEX,
-        fontSize: 9,
+        fontSize: 11,
         fontWeight: "600",
         fontFamily: "IBM Plex Sans, Helvetica Neue, Arial, sans-serif",
       },
     });
     caption.anchor.set(0.5);
-    caption.position.set(1, 8);
+    caption.position.set(0, 6);
     card.addChild(caption);
     return card;
   }
@@ -443,19 +465,21 @@ export async function mountWorkspace(host: HTMLElement, handlers: MountHandlers)
     const dy = canvasRect.top - hostRect.top;
     const anchors: Record<string, AnchorPoint> = {};
     for (const area of AREA_IDS) {
-      const at = centerOf(area);
+      const at = toHost(centerOf(area));
       anchors[`area:${area}`] = { x: at.x + dx, y: at.y + dy };
     }
-    const bench = centerOf("bench");
+    const bench = toHost(centerOf("bench"));
     anchors.bench = { x: bench.x + dx, y: bench.y + dy };
     for (const [id, motion] of motions) {
-      anchors[`attacker:${id}`] = { x: motion.x + dx, y: motion.y + dy };
+      const at = toHost(motion);
+      anchors[`attacker:${id}`] = { x: at.x + dx, y: at.y + dy };
     }
     if (model) {
       for (const deployment of model.deployments) {
         if (!deployment.area) continue;
-        const at = centerOf(deployment.area);
-        anchors[`deployment:${deployment.id}`] = { x: at.x + dx, y: at.y - 58 + dy };
+        const local = centerOf(deployment.area);
+        const at = toHost({ x: local.x, y: local.y - 52 });
+        anchors[`deployment:${deployment.id}`] = { x: at.x + dx, y: at.y + dy };
       }
     }
     handlers.onAnchors(anchors);
@@ -476,7 +500,14 @@ export async function mountWorkspace(host: HTMLElement, handlers: MountHandlers)
   };
   app.ticker.add(tick);
 
+  let lastW = -1;
+  let lastH = -1;
   const onResize = () => {
+    const width = host.clientWidth;
+    const height = host.clientHeight;
+    if (width === lastW && height === lastH) return;
+    lastW = width;
+    lastH = height;
     layout();
     for (const motion of motions.values()) {
       motion.fromX = motion.x;
@@ -501,6 +532,8 @@ export async function mountWorkspace(host: HTMLElement, handlers: MountHandlers)
     publishAnchors();
   };
   window.addEventListener("resize", onResize);
+  const resizeObserver = new ResizeObserver(() => onResize());
+  resizeObserver.observe(host);
   layout();
 
   return {
@@ -512,6 +545,7 @@ export async function mountWorkspace(host: HTMLElement, handlers: MountHandlers)
       publishAnchors();
     },
     destroy() {
+      resizeObserver.disconnect();
       window.removeEventListener("resize", onResize);
       motionQuery?.removeEventListener?.("change", onMotion);
       app.ticker.remove(tick);
