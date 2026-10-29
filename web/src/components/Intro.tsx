@@ -69,6 +69,15 @@ export function Intro({
             <input
               type="radio"
               name="mode"
+              checked={mode === "simulation"}
+              onChange={() => onMode("simulation")}
+            />
+            Scripted simulation
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="mode"
               checked={mode === "replay"}
               onChange={() => onMode("replay")}
             />
@@ -77,15 +86,6 @@ export function Intro({
           <label>
             <input type="radio" name="mode" checked={mode === "live"} onChange={() => onMode("live")} />
             Live operator stream
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="mode"
-              checked={mode === "simulation"}
-              onChange={() => onMode("simulation")}
-            />
-            Simulation
           </label>
         </fieldset>
         {mode === "replay" ? (
@@ -105,7 +105,8 @@ export function Intro({
           </fieldset>
         ) : mode === "simulation" ? (
           <p className="live-note">
-            Start plays the scripted simulation. It does not connect to an operator, and it is not a recorded run.
+            Plays a labeled illustrative script with autoplay, loop, and speed controls. It does not use the trusted
+            controller and is not evidence of a recorded run.
           </p>
         ) : (
           <p className="live-note">
