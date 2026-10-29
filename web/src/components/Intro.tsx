@@ -78,6 +78,15 @@ export function Intro({
             <input type="radio" name="mode" checked={mode === "live"} onChange={() => onMode("live")} />
             Live operator stream
           </label>
+          <label>
+            <input
+              type="radio"
+              name="mode"
+              checked={mode === "simulation"}
+              onChange={() => onMode("simulation")}
+            />
+            Simulation
+          </label>
         </fieldset>
         {mode === "replay" ? (
           <fieldset className="trace-pick">
@@ -94,6 +103,10 @@ export function Intro({
               </label>
             ))}
           </fieldset>
+        ) : mode === "simulation" ? (
+          <p className="live-note">
+            Start plays the scripted simulation. It does not connect to an operator, and it is not a recorded run.
+          </p>
         ) : (
           <p className="live-note">
             Start connects to the loopback operator stream. If it is down, nothing is played in its place.

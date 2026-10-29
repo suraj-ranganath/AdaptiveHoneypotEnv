@@ -3,6 +3,7 @@ import type { Presentation } from "../state/presentation";
 const LABEL: Record<Presentation["badge"], string> = {
   replay: "RECORDED REPLAY",
   live: "LIVE",
+  simulation: "SIMULATION",
   connecting: "CONNECTING",
   unavailable: "LIVE UNAVAILABLE",
   "not-started": "NOT CONNECTED",

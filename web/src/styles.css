@@ -83,6 +83,7 @@ h1, h2, h3, h4, p { margin: 0; }
   background: var(--paper);
 }
 .badge-replay { background: transparent; color: var(--ink); }
+.badge-simulation { background: var(--brass); color: var(--paper); border-color: #6d5310; }
 .badge-connecting { border-style: dashed; }
 .badge-unavailable, .badge-not-started { color: var(--compromise); border-color: var(--compromise); background: transparent; }
 .dev-flag, .badge-detail {
@@ -106,6 +107,24 @@ h1, h2, h3, h4, p { margin: 0; }
   color: var(--brass);
   letter-spacing: 0.08em;
 }
+.sim-strip {
+  margin: 0 22px 8px;
+  padding: 8px 12px;
+  background: #f8f1d8;
+  border: 1px solid var(--brass);
+  color: var(--ink);
+}
+.sim-banner {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.sim-why {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink);
+}
 .op-note { color: var(--muted); }
 
 .stage {
@@ -122,14 +141,18 @@ h1, h2, h3, h4, p { margin: 0; }
 .workspace-canvas { flex: 1; min-height: 280px; }
 .workspace-canvas canvas { display: block; }
 
-.round-chip {
+.meter-row {
   position: absolute;
   z-index: 2;
   top: 14px;
   left: 16px;
   display: flex;
-  flex-direction: column;
+  gap: 28px;
   pointer-events: none;
+}
+.round-chip {
+  display: flex;
+  flex-direction: column;
 }
 .round-chip span {
   font-size: 11px;
