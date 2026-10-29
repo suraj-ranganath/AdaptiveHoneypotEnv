@@ -16,6 +16,10 @@ from adaptivehoneypotenv.contracts.limits import (
 )
 
 
+class MessageboardError(Exception):
+    """A backend failed; never turn this into a successful empty board read."""
+
+
 @dataclass(frozen=True)
 class PostedMessage:
     post_id: int
@@ -61,6 +65,12 @@ class Messageboard:
 
     def commit(self, post: PostedMessage) -> None:
         self._posts.append(post)
+
+    def acknowledge_read(self, *, reader_actor_id: str, page: BoardPage) -> None:
+        """Record optional backend receipts after the delivered page is journaled."""
+
+    def close(self) -> None:
+        """Release backend resources. The default board owns none."""
 
     def read(
         self,

@@ -14,7 +14,7 @@ import os
 import sys
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import ValidationError
 
@@ -40,6 +40,7 @@ from adaptivehoneypotenv.contracts.limits import (
 )
 from adaptivehoneypotenv.deployment import Deployment, EpisodeTarget
 from adaptivehoneypotenv.env import EpisodeCore
+from adaptivehoneypotenv.gateway.messageboard import MessageboardError
 from adaptivehoneypotenv.model_api import (
     ChatCompletionResult,
     ChatMessage,
@@ -131,13 +132,22 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("gate-a")
     sub.add_parser("gate-b")
-    sub.add_parser("observe")
-    run = sub.add_parser("run")
+    observe = sub.add_parser("observe")
+    observe.add_argument("--messageboard", choices=("memory", "swarmchat"), default="memory")
+    run = sub.add_parser(
+        "run",
+        help="run a full live episode or a single defender-only scripted smoke transition",
+        description=(
+            "Live mode runs defender/attacker transitions until the episode ends. "
+            "Scripted mode checks one defender transition without attacker models."
+        ),
+    )
     run.add_argument("--defender", choices=("scripted", "live"), required=True)
     run.add_argument("--attacker-max-tokens", type=int)
     run.add_argument("--defender-max-tokens", type=int)
     run.add_argument("--max-cost-usd")
     run.add_argument("--seed", type=int, default=_SEED)
+    run.add_argument("--messageboard", choices=("memory", "swarmchat"), default="memory")
     args = parser.parse_args(argv)
     try:
         if args.command == "gate-a":
@@ -145,10 +155,13 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "gate-b":
             return _gate_b()
         if args.command == "observe":
-            return _observe()
+            return _observe(args.messageboard)
         if args.defender == "live":
             return _run_live(args)
-        return _run_scripted(args.seed)
+        return _run_scripted(args.seed, args.messageboard)
+    except MessageboardError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
     except _GateFailure as exc:
         print(exc.token, file=sys.stderr)
         return 1
@@ -237,9 +250,11 @@ def _gate_b() -> int:
     return 0
 
 
-def _observe() -> int:
+def _observe(messageboard: Literal["memory", "swarmchat"] = "memory") -> int:
     root = _RUNS / "observe"
-    core = EpisodeCore(root, team="trio", track="catalogue", repo_root=_REPO)
+    core = EpisodeCore(
+        root, team="trio", track="catalogue", repo_root=_REPO, messageboard_backend=messageboard
+    )
     server: OperatorServer | None = None
     try:
         _reset(core)
@@ -259,9 +274,11 @@ def _observe() -> int:
     return 0
 
 
-def _run_scripted(seed: int) -> int:
+def _run_scripted(seed: int, messageboard: Literal["memory", "swarmchat"] = "memory") -> int:
     root = _RUNS / "scripted"
-    core = EpisodeCore(root, team="trio", track="catalogue", repo_root=_REPO)
+    core = EpisodeCore(
+        root, team="trio", track="catalogue", repo_root=_REPO, messageboard_backend=messageboard
+    )
     try:
         _reset(core, seed)
         result = core.step_defender(_defender(_wait_result()), core.mint_action_id())
@@ -316,14 +333,38 @@ def _run_live(args: argparse.Namespace) -> int:
         attacker_adapter=attacker,
         attacker_per_call_cap=attacker_max,
         defender_max_tokens=defender_max,
+        messageboard_backend=args.messageboard,
     )
     try:
         _reset(core, args.seed)
-        core.step_defender(defender, core.mint_action_id())
+        transitions = 0
+        while True:
+            result = core.step_defender(defender, core.mint_action_id())
+            transitions += 1
+            if not result.info.valid or result.terminated or result.truncated:
+                break
+        print(
+            json.dumps(
+                {
+                    "episode_id": core.episode_id,
+                    "defender_transitions": transitions,
+                    "valid": result.info.valid,
+                    "terminated": result.terminated,
+                    "truncated": result.truncated,
+                    "termination_reason": result.info.termination_reason,
+                    "truncation_reason": result.info.truncation_reason,
+                    "invalid_reason": result.info.invalid_reason,
+                }
+            ),
+            flush=True,
+        )
+        return 0 if result.info.valid else 1
+    except KeyboardInterrupt:
+        core.kill()
+        print("operator_kill", file=sys.stderr, flush=True)
+        return 130
     finally:
         core.close()
-    print("true", flush=True)
-    return 0
 
 
 def _pair_episode(
@@ -483,6 +524,12 @@ def _reset(core: EpisodeCore, seed: int = _SEED) -> None:
         raise _GateFailure("reset_failed") from None
     journal = core.journal_directory()
     print(f"{core.episode_id} {journal}", flush=True)
+    board_dir = core.messageboard_directory()
+    if board_dir is not None:
+        print(f"SwarmChat data (private): {board_dir}", flush=True)
+        print(
+            "Open with: uv run --extra swarmchat swarmchat view --data <that-directory>", flush=True
+        )
 
 
 def _solver_matches(core: EpisodeCore) -> bool:

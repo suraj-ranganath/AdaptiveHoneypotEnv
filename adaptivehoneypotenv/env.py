@@ -73,7 +73,8 @@ from adaptivehoneypotenv.contracts.transition import (
 )
 from adaptivehoneypotenv.deployment import Deployment, DeploymentError, EpisodeTarget
 from adaptivehoneypotenv.events import ControllerLog, build_event, envelope
-from adaptivehoneypotenv.gateway.gateway import ToolGateway
+from adaptivehoneypotenv.gateway.gateway import GatewayError, ToolGateway
+from adaptivehoneypotenv.gateway.messageboard import Messageboard
 from adaptivehoneypotenv.gateway.upstream import ActorRouteUpstream, LoopbackFixedUpstream
 from adaptivehoneypotenv.model_api import (
     ChatCompletionRequest,
@@ -141,7 +142,16 @@ class EpisodeCore:
         fault_stage: str | None = None,
         comparison_id: str | None = None,
         repo_root: Path | None = None,
+        messageboard_backend: Literal["memory", "swarmchat"] = "memory",
     ) -> None:
+        if messageboard_backend not in {"memory", "swarmchat"}:
+            raise ValueError("unknown messageboard backend")
+        if messageboard_backend == "swarmchat":
+            from adaptivehoneypotenv.integrations.swarmchat import require_swarmchat
+
+            require_swarmchat()
+        self._messageboard_backend = messageboard_backend
+        self._messageboard: Messageboard | None = None
         if attacker_adapter is not None and attacker_adapter.adapter_id != LIVE_MODEL_ADAPTER_ID:
             raise ValueError("attackers require the live openai_compatible adapter")
         self._run_root = Path(run_root)
@@ -274,6 +284,7 @@ class EpisodeCore:
     def reset(self, seed: int) -> tuple[DefenderObservation, TransitionInfo]:
         if self._busy:
             raise RuntimeError("episode is stepping")
+        self._close_messageboard()
         self._seed = seed
         if self._target is not None:
             self._deployment.destroy(self._target)
@@ -315,10 +326,19 @@ class EpisodeCore:
         root = self._run_root / target.episode_id
         versions = root / "workspace" / "versions"
         private_dir = root / "private"
-        private_dir.mkdir(parents=True, exist_ok=True)
+        private_dir.mkdir(parents=True, mode=0o700, exist_ok=True)
+        os.chmod(private_dir, 0o700)
         version0 = versions / "0000"
         try:
             materialize_workspace(bundle, version0, repo_root=self._repo_root)
+            if self._messageboard_backend == "swarmchat":
+                from adaptivehoneypotenv.integrations.swarmchat import SwarmChatMessageboard
+
+                self._messageboard = SwarmChatMessageboard(
+                    private_dir / "swarmchat",
+                    solo=self._team == "solo",
+                    episode_id=target.episode_id,
+                )
             port = _loopback_port(target.bridge_endpoint)
             gateway = ToolGateway(
                 episode_id=target.episode_id,
@@ -330,10 +350,10 @@ class EpisodeCore:
                 fixture_literals=_literals(bundle),
                 journal_dir=root / "journal",
                 world_version=0,
+                messageboard=self._messageboard,
             )
         except Exception as exc:
-            self._deployment.destroy(target)
-            self._target = None
+            self._fail_reset()
             raise RuntimeError("reset_failed") from exc
         self._gateway = gateway
         self._log = ControllerLog(gateway)
@@ -455,11 +475,27 @@ class EpisodeCore:
             self._stop(self.mint_action_id(), classify_stop(operator_kill=True), attempts=0)
 
     def close(self) -> None:
-        if self._target is not None:
-            self._deployment.destroy(self._target)
-            self._target = None
-        if self._owns_deployment:
-            self._deployment.close()
+        try:
+            if self._target is not None:
+                self._deployment.destroy(self._target)
+                self._target = None
+        finally:
+            try:
+                self._close_messageboard()
+            finally:
+                if self._owns_deployment:
+                    self._deployment.close()
+
+    def messageboard_directory(self) -> Path | None:
+        """Private operator data location, never part of a model observation."""
+        if self._messageboard_backend != "swarmchat" or self._private is None:
+            return None
+        return self._private / "swarmchat"
+
+    def _close_messageboard(self) -> None:
+        board, self._messageboard = self._messageboard, None
+        if board is not None:
+            board.close()
 
     def genuine_route_ok(self) -> bool:
         bundle = self._bundle
@@ -590,6 +626,9 @@ class EpisodeCore:
             return self._ended_result(action_id)
         if self._kill_requested:
             return self._stop(action_id, classify_stop(operator_kill=True), attempts=0)
+        # The defender has consumed the previous window's observation. Keep
+        # this new window visible through both the result and the next decision.
+        self._activity_cursor = self._require_gateway().next_sequence() - 1
         self._busy = True
         try:
             return self._transition(action, action_id)
@@ -626,7 +665,16 @@ class EpisodeCore:
                 attempts=gateway.attempts_used - attempts_before,
                 newly=newly,
             )
-        window = self._attacker_window()
+        try:
+            window = self._attacker_window()
+        except GatewayError:
+            if gateway.episode_valid:
+                raise
+            return self._invalid(
+                action_id,
+                gateway.invalid_reason or "gateway_failed",
+                attempts=gateway.attempts_used - attempts_before,
+            )
         if window.provider_error:
             return self._invalid(
                 action_id,
@@ -973,7 +1021,6 @@ class EpisodeCore:
                 truncation_reason=end.truncation_reason.value if end.truncation_reason else None,
             )
             self._ended = True
-        self._activity_cursor = self._require_gateway().next_sequence() - 1
         validate_journal(self._require_gateway().events)
         result = self._pack(
             components=components,
@@ -1121,9 +1168,12 @@ class EpisodeCore:
         self._baseline_users = users
 
     def _fail_reset(self) -> None:
-        if self._target is not None:
-            self._deployment.destroy(self._target)
-            self._target = None
+        try:
+            if self._target is not None:
+                self._deployment.destroy(self._target)
+                self._target = None
+        finally:
+            self._close_messageboard()
 
     def _model_started(self, *, role: str, actor_id: str, adapter_id: str) -> None:
         self._append_model(

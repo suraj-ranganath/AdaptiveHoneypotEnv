@@ -11,6 +11,12 @@ dependencies = [
     "pyyaml>=6,<7",
 ]
 
+[project.optional-dependencies]
+swarmchat = ["swarmchat==0.1.0"]
+
+[tool.uv.sources]
+swarmchat = { git = "https://github.com/Pranjal2041/swarmchat.git", rev = "fb5aa6a05b40fba70f749cd3017aeb3219ab6ac1" }
+
 [dependency-groups]
 dev = [
     "mypy>=1.13",
@@ -53,5 +59,10 @@ warn_required_dynamic_aliases = true
 
 [[tool.mypy.overrides]]
 module = ["docker", "docker.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["swarmchat", "swarmchat.*"]
 follow_imports = "skip"
 ignore_missing_imports = true

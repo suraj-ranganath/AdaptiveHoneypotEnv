@@ -205,6 +205,17 @@ make typecheck
 make test
 ```
 
+For a full live episode on the Docker/iptables host, set `OPENROUTER_API_KEY` in the controller environment and supply explicit caps:
+
+```bash
+uv run python -m adaptivehoneypotenv run --defender live \
+  --attacker-max-tokens 1024 --defender-max-tokens 1024 --max-cost-usd 5
+```
+
+The runner repeats defender decisions and attacker windows until termination, an external cutoff, or an invalid transition. It prints a final JSON summary; a completed run does not imply a defender win. `run --defender scripted` and `observe` are defender-only smoke paths without attacker models.
+
+For attacker communication backed by [SwarmChat](https://github.com/Pranjal2041/swarmchat), install `uv sync --frozen --extra swarmchat` and select `--messageboard swarmchat` on `run` or `observe` (or `messageboard_backend="swarmchat"` on `EpisodeCore`). Each episode gets a private board and SwarmChat's authenticated native viewer. The existing attempt costs, round visibility, defender isolation, and journal scoring stay in place. See the [integration guide](docs/SWARMCHAT.md) for commands and lifecycle.
+
 [demo.yaml](demo.yaml) selects `secret_store_ops/v1`, a naive lockstep trio, the contextual track, and `adaptive_llm`, with `runtime.max_cost_usd` set to `5.0`. The episode interface is:
 
 ```python

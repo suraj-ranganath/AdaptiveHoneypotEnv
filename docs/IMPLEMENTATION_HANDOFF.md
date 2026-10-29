@@ -82,6 +82,8 @@ Fault injection must cover failure after account creation, after the first item 
 
 ## 6. Actor execution and attempt accounting
 
+**Optional SwarmChat backend (integration added 2026-10-29):** [SWARMCHAT.md](SWARMCHAT.md) describes the pinned local store and authenticated native viewer behind the existing board tools. It preserves the frozen schemas, attempt costs, explicit reads, and earlier-round visibility. Native SwarmChat APIs are not model tools; AgentEnv and the core retain their existing roles.
+
 Use the exact seven tools and bounds in DESIGN §6: `list_directory`, `search_files`, `read_file`, `request_service`, `post_to_messageboard`, `read_messageboard`, and `finish`. Literal deterministic search, bounded reads, fixed-upstream HTTP, and explicit clipping form part of the scenario version. Unexpected filesystem/transport errors and expected invalid tool requests have different statuses. Do not substitute synthetic search hits or fake HTTP responses.
 
 Model completion produces one attempted action. One/multiple/zero tool-call cases, `finish`, messageboard posts and reads, invalid arguments, and refusal handling follow the core contract. Invalid turns consume budget. Provider transport retry counts are separate and bounded; no successful tool execution is retried because the provider response or observer connection failed.

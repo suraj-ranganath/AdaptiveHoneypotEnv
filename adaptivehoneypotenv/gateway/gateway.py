@@ -74,7 +74,12 @@ from adaptivehoneypotenv.gateway.filesystem import (
     search_files,
 )
 from adaptivehoneypotenv.gateway.journal import EpisodeJournal, JournalWriteError
-from adaptivehoneypotenv.gateway.messageboard import BoardPage, Messageboard, PostedMessage
+from adaptivehoneypotenv.gateway.messageboard import (
+    BoardPage,
+    Messageboard,
+    MessageboardError,
+    PostedMessage,
+)
 from adaptivehoneypotenv.gateway.upstream import FixedUpstream, UpstreamExchangeError
 from adaptivehoneypotenv.model_api import TokenUsage, ToolCall
 
@@ -148,6 +153,7 @@ class ToolGateway:
         fixture_literals: tuple[str, ...] = (),
         journal_dir: Path | None = None,
         world_version: int = 0,
+        messageboard: Messageboard | None = None,
     ) -> None:
         if FOLLOW_REDIRECTS:
             raise GatewayError("redirects_forbidden")
@@ -171,7 +177,9 @@ class ToolGateway:
         self._fixture_literals = fixture_literals
         self._world_version = world_version
         self._journal = EpisodeJournal(episode_id, directory)
-        self._board = Messageboard(solo=team == "solo")
+        self._board = (
+            messageboard if messageboard is not None else Messageboard(solo=team == "solo")
+        )
         self._attempts = AttemptLedger()
         self._tokens = TokenLedger()
         self._finished: set[str] = set()
@@ -501,6 +509,9 @@ class ToolGateway:
         except JournalWriteError as exc:
             self._invalidate("journal_write_failed")
             raise GatewayError("journal_write_failed") from exc
+        except MessageboardError as exc:
+            self._invalidate("messageboard_failed")
+            raise GatewayError("messageboard_failed") from exc
 
     def _run_parsed(
         self,
@@ -567,6 +578,8 @@ class ToolGateway:
         )
         if result.commit_post is not None:
             self._board.commit(result.commit_post)
+        if result.board_page is not None:
+            self._board.acknowledge_read(reader_actor_id=actor_id, page=result.board_page)
         if result.finish_actor:
             self._finished.add(actor_id)
         return _delivery(
