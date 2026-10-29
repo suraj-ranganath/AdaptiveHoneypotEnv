@@ -26,6 +26,8 @@ export function Timeline({
   canScrub,
   onCursor,
   onToggle,
+  onRestart,
+  idleLabel = "Start of the recording",
 }: {
   events: ObserverEvent[];
   cursor: number;
@@ -33,6 +35,8 @@ export function Timeline({
   canScrub: boolean;
   onCursor(next: number): void;
   onToggle(): void;
+  onRestart?: () => void;
+  idleLabel?: string;
 }) {
   const current = cursor > 0 ? events[cursor - 1] : null;
   return (
@@ -44,6 +48,11 @@ export function Timeline({
       ) : (
         <span className="timeline-note">Live stream. Scrub is for a recording.</span>
       )}
+      {onRestart ? (
+        <button type="button" className="ghost" onClick={onRestart}>
+          Restart
+        </button>
+      ) : null}
       <input
         type="range"
         min={0}
@@ -60,7 +69,7 @@ export function Timeline({
             seq {current.sequence} · {current.kind} · {current.actorId}
           </>
         ) : (
-          "Start of the recording"
+          idleLabel
         )}
       </p>
       <div className="ticks" aria-hidden="true">

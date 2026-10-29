@@ -1,7 +1,7 @@
-export type RequestedMode = "replay" | "live";
+export type RequestedMode = "replay" | "live" | "simulation";
 export type ConnectionState = "idle" | "connecting" | "open" | "closed" | "unreachable";
 
-export type BadgeKind = "replay" | "live" | "connecting" | "unavailable" | "not-started";
+export type BadgeKind = "replay" | "live" | "simulation" | "connecting" | "unavailable" | "not-started";
 
 export interface Presentation {
   badge: BadgeKind;
@@ -18,6 +18,16 @@ export function resolvePresentation(input: {
   developmentData: boolean;
   connection: ConnectionState;
 }): Presentation {
+  if (input.requested === "simulation") {
+    return {
+      badge: "simulation",
+      developmentData: false,
+      liveClaimBlocked: false,
+      title: "Simulation",
+      detail: "Illustrative scripted episode, not a recorded run.",
+    };
+  }
+
   if (input.screen === "intro") {
     if (input.requested === "live") {
       return {
